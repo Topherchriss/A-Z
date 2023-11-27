@@ -40,8 +40,32 @@ Clone the repository:
 Run the application using the provided script ('python Alpha.py').
     The GUI will appear, allowing users to interact with the banking system.
 
-2. Creating a New Account:
-    The application comes pre-loaded with three customer accounts for demonstration purposes.
+2. ## Pre-loaded Test Accounts
+
+For your convenience, the application comes pre-loaded with three test accounts. These accounts are meant for testing and demonstration purposes only. Do not use real or sensitive information.
+
+1. **Account 1**
+   - Customer Name: Jean Maswa
+   - Account Number: 1000101
+   - Customer ID (PIN): 1456
+   - Default Balance: $1000.00
+
+2. **Account 2**
+   - Customer Name: Chachu Mulumba
+   - Account Number: 1000102
+   - Customer ID (PIN): 2567
+   - Default Balance: $1500.00
+
+3. **Account 3**
+   - Customer Name: Zigi Zige
+   - Account Number: 1000103
+   - Customer ID (PIN): 3678
+   - Default Balance: $2000.00
+
+Feel free to use these accounts to explore the application's features.
+
+**Important:** These accounts are not real, and any changes made will not have any impact on actual bank accounts or financial transactions. Do not use real information for testing purposes.
+
 
 3. Performing Transactions:
     Use the provided entry fields to input customer name, account number, amount, and PIN for transactions.
@@ -49,10 +73,7 @@ Run the application using the provided script ('python Alpha.py').
 
 ### Contributing
 
-constructive contributions of anykind are warmly welcomed.
-### Contributing
-
-We welcome and appreciate contributions to A-Z TRAPEZA! To get started, follow the steps below:
+We welcome and appreciate constructive contributions to A-Z TRAPEZA! To get started, follow the steps below:
 
 1. **Fork the Repository:**
 
