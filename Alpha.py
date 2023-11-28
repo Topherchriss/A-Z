@@ -143,8 +143,8 @@ class BankGUI:
         self.customer3.addAccount(self.customer3_account)
 
         # Select the first customer and account by default
-        self.selected_customer = self.customer3
-        self.selected_account = self.customer3_account
+        self.selected_customer = self.customer1
+        self.selected_account = self.customer1_account
         self.update_display()
 
         # Method to update the GUI display based on the selected customer and account
@@ -201,6 +201,8 @@ class BankGUI:
 
             messagebox.showinfo("Success", f"Deposit of ${amount} was succesful. New account balance: ${self.selected_account.account_balance}")
 
+            self.entry_customer_id.delete(0, 'end')
+
     # Method to withdraw
     def withdraw_cash(self):
         customer_name = self.entry_customer_name.get()
@@ -235,6 +237,8 @@ class BankGUI:
 
             messagebox.showinfo("Success", f"Withdrawal of ${amount} was a success. Your new account balance is: ${self.selected_account.account_balance}")
 
+            self.entry_customer_id.delete(0, 'end')
+
 
     # Method to check balance
     def check_balance(self):
@@ -250,7 +254,9 @@ class BankGUI:
 
         else:
             self.selected_account.checkBalance()
-            messagebox.showinfo("Account Balance", f"Dear ${customer_name}, your current account balance is: ${self.selected_account.account_balance}")
+            messagebox.showinfo("Account Balance", f"Dear {customer_name}, your current account balance is: ${self.selected_account.account_balance}")
+
+            self.entry_customer_id.delete(0, 'end')
 
     # Method to display transactions
     def show_transactions(self):
@@ -271,6 +277,8 @@ class BankGUI:
             else:
                 formatted_transactions = "\n".join(str(transaction) for transaction in transaction_history)
                 messagebox.showinfo("Transactions", f"{customer_name}'s transaction history:\n{formatted_transactions}")
+
+                self.entry_customer_id.delete(0, 'end')
 
 root = tk.Tk()
 app = BankGUI(root)
