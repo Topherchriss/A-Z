@@ -13,7 +13,7 @@ class BankAccount:
 
 
     def deposit(self, amount):
-        if amount > 0:
+        if amount > 10:
             self.account_balance += amount
 
             self.transaction_history.append({"Type of transaction": "Deposit", "Amount deposited": amount})
@@ -22,6 +22,7 @@ class BankAccount:
             print(f"Dear customer your deposit of {amount} was succesful. Your new balance is: {self.account_balance}")
         else:
             raise ValueError("Invalid deposit amount. Please enter a positive value.")
+
 
     def withdraw(self, amount):
 
@@ -33,7 +34,7 @@ class BankAccount:
 
             print(f"Withdrawl of {amount} was succesful. Your new account balance is {self.account_balance}")
         else:
-            print(f"Invalid withdrawal amount or Insufficient funds to withdraw: {amount}")
+            raise ValueError(f"Invalid withdrawal amount or Insufficient funds to withdraw: {amount}")
 
 
     def checkBalance(self):

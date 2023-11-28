@@ -1,5 +1,5 @@
 import unittest
-#from Alpha import BankAccount
+from Alpha import BankAccount
 
 class TestTrapeza(unittest.TestCase):
 
