@@ -102,7 +102,7 @@ We welcome and appreciate constructive contributions to A-Z TRAPEZA! To get star
 2. **Clone Your Fork:**
 
    ```bash
-   git clone https://github.com/YourUsername/A-Z.git
+   git clone https://github.com/Topherchriss/A-Z.git
    cd A-Z
   ```
 3. ***Create New Branch***
