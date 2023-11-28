@@ -1,3 +1,4 @@
+import unittest
 import tkinter as tk
 from tkinter import messagebox
 
@@ -190,6 +191,7 @@ class BankGUI:
 
         elif amount < 10:
             messagebox.showerror("Unsuccessful", f"Deposit of ${amount} is below the minimum (USD 10)")
+            self.entry_customer_id.delete(0, 'end')
 
         else:
             self.selected_account.deposit(amount)
@@ -227,6 +229,9 @@ class BankGUI:
 
         elif amount < 10:
             messagebox.showerror("Invalid Amount", f"Cannot proceed to withdrawal. Withdrawal amount of ${amount} is below USD 10")
+
+            self.entry_customer_id.delete(0, 'end')
+
         else:
             self.selected_account.withdraw(amount)
 
@@ -267,6 +272,7 @@ class BankGUI:
         if customer_name != self.selected_account.account_holder or account_number != self.selected_account.account_number:
             messagebox.showerror("Invalid Customer", "Customer not found!")
 
+
         elif customer_id != self.selected_account.customer_id:
             messagebox.showerror("Wrong Pin", f"Cannot proceed to show account transaction You entered a wrong pin!")
 
@@ -283,4 +289,9 @@ class BankGUI:
 root = tk.Tk()
 app = BankGUI(root)
 root.mainloop()
+
+if __name__ == '__main__':
+    test_loader = unittest.TestLoader()
+    test_suite = test_loader.discover('tests',pattern='test_Alpha.py')
+    unittest.TextTestRunner().run(test_suite)
 
