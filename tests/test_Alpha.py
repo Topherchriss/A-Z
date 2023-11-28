@@ -1,8 +1,9 @@
 import unittest
+#from Alpha import BankAccount
 
-class TestTrapeza(unitest.TestCase):
+class TestTrapeza(unittest.TestCase):
 
-    def setUp():
+    def setUp(self):
         # Call this method before each test
         self.account = BankAccount(account_number="1000101", account_holder="Jean Maswa", customer_id="1456", default_balance=1000)
 
