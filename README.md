@@ -33,6 +33,26 @@ Clone the repository:
 
    python Alpha.py
    ```
+
+## Running Tests
+
+To ensure the stability and functionality of A-Z TRAPEZA, i have included a set of tests. These tests cover various aspects of the application, including deposit, withdrawal, balance checking, and transaction history.
+
+### Prerequisites
+
+Before running the tests, make sure you have the required dependencies installed:
+
+- Python (version 3.X.X)
+- unittest library (comes with Python)
+
+### Running the Tests
+
+To run the tests, use the following command in your terminal:
+
+```bash
+python -m unittest discover -s tests -p 'test_Alpha.py'
+```
+
 ### Usage
 
 1. Launching the Application:
