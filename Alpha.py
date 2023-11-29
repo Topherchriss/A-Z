@@ -46,17 +46,21 @@ class BankAccount:
 
 
     def send_notification(self):
+        notification_message = []
+
         # Check for significant events
         if self.transaction_history:
             last_transaction = self.transaction_history[-1]
-            if last_transaction["Type of transaction"].lower() == "Deposit" and last_transaction["Amount deposited"] > 50000:
-                print("Notification: A large deposit was made to your account.")
-            elif last_transaction["Type of transaction"].lower() == "Withdrawl" and last_transaction["Amount withdrawn"] > 5000:
-                print("Notification: A large withdrawal was made from your account.")
+            if last_transaction["Type of transaction"].lower() == "Deposit" and last_transaction["Amount deposited"] >= 50000:
+                notification_message.append("Notification: A large deposit was made to your account.")
+            elif last_transaction["Type of transaction"].lower() == "Withdrawl" and last_transaction["Amount withdrawn"] >= 5000:
+                notification_message.append("Notification: A large withdrawal was made from your account.")
 
         # Check balance threshold
-        if self.account_balance < 100:
-            print("Notification: Your account balance is below $100.")
+        if self.account_balance <= 100:
+            notification_message.append("Notification: Your account balance is below $100.")
+
+        return '\n'.join(notification_message)
 
 class BankCustomer:
 
@@ -135,7 +139,7 @@ class BankGUI:
         self.customer2 = BankCustomer(customer_name="Chachu Mulumba")
         self.customer3 = BankCustomer(customer_name="Zigi Zige")
 
-        self.customer1_account = BankAccount(account_number="1000101", account_holder="Jean Maswa", customer_id="1456", default_balance=1000)
+        self.customer1_account = BankAccount(account_number="1000101", account_holder="Jean Maswa", customer_id="1456", default_balance=10000)
         self.customer2_account = BankAccount(account_number="1000102", account_holder="Chachu Mulumba", customer_id="2567",  default_balance=1500)
         self.customer3_account = BankAccount(account_number="1000103", account_holder="Zigi Zige", customer_id="3678", default_balance=2000)
 
