@@ -1,6 +1,7 @@
 import unittest
+from unittest.mock import patch
 from Alpha import BankAccount
-from unittest import mock
+
 
 class TestTrapeza(unittest.TestCase):
 
@@ -47,11 +48,52 @@ class TestTrapeza(unittest.TestCase):
         trans = self.account.get_transaction_history()
         self.assertEqual(len(trans), 4, "Transaction history should have four entities")
 
-    def test_send_notification(self):
-        with mock.patch('builtins.print') as mock_print:
-            self.account.deposit(60000)
-            self.account.send_notification()
+    """
+    testing notifications proved to be tricky challenge so i decided to use this approach and separate the tests in a diffrent class to enhance the ability to test the send_notification method in diffrent scenarios.
 
-        # Assert that the expected message is in the captured print calls
+    """
+
+class TestSendNotification(unittest.TestCase):
+
+    def setUp(self):
+        # Call this method before each test
+        self.account = BankAccount(account_number="1000101", account_holder="Jean Maswa", customer_id="1456", default_balance=10000)
+
+    @patch('builtins.print')
+    def test_large_deposit_notification(self, mock_print):
+        # Arrange
+        self.account.deposit(60000)
+
+        # Act
+        self.account.send_notification()
+
+        # Assert
         expected_message = "Notification: A large deposit was made to your account."
-        self.assertIn(mock.call(expected_message), mock_print.call_args_list)
+        mock_print.assert_called_with(expected_message)
+
+    @patch('builtins.print')
+    def test_large_withdrawal_notification(self, mock_print):
+        # Arrange
+        self.account.withdraw(7000)
+
+        # Act
+        self.account.send_notification()
+
+        # Assert
+        expected_message = "Notification: A large withdrawal was made from your account."
+        mock_print.assert_called_with(expected_message)
+
+    @patch('builtins.print')
+    def test_no_notification(self, mock_print):
+        # Arrange - No significant events
+        self.account.deposit(2000)
+
+        # Act
+        self.account.send_notification()
+
+        # Assert
+        expected_message = "Dear customer your deposit of 2000 was succesful. Your new balance is: 12000"
+
+        mock_print.assert_called_with(expected_message)
+
+

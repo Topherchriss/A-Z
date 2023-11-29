@@ -46,21 +46,22 @@ class BankAccount:
 
 
     def send_notification(self):
-        notification_message = []
 
         # Check for significant events
         if self.transaction_history:
             last_transaction = self.transaction_history[-1]
-            if last_transaction["Type of transaction"].lower() == "Deposit" and last_transaction["Amount deposited"] >= 50000:
-                notification_message.append("Notification: A large deposit was made to your account.")
-            elif last_transaction["Type of transaction"].lower() == "Withdrawl" and last_transaction["Amount withdrawn"] >= 5000:
-                notification_message.append("Notification: A large withdrawal was made from your account.")
+
+            #Check for a large deposit
+            if last_transaction["Type of transaction"].lower() == "deposit" and last_transaction["Amount deposited"] >= 50000:
+                print("Notification: A large deposit was made to your account.")
+
+            #Check for a large withdrawal
+            elif last_transaction["Type of transaction"].lower() == "withdrawal" and last_transaction["Amount withdrawn"] >= 5000:
+                print("Notification: A large withdrawal was made from your account.")
 
         # Check balance threshold
         if self.account_balance <= 100:
-            notification_message.append("Notification: Your account balance is below $100.")
-
-        return '\n'.join(notification_message)
+            print("Notification: Your account balance is below $100.")
 
 class BankCustomer:
 
