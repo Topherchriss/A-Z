@@ -49,7 +49,7 @@ class TestTrapeza(unittest.TestCase):
         self.assertEqual(len(trans), 4, "Transaction history should have four entities")
 
     """
-    testing notifications proved to be tricky challenge so i decided to use this approach and separate the tests in a diffrent class to enhance the ability to test the send_notification method in diffrent scenarios.
+    testing notifications proved to be a tricky challenge so i decided to use this approach and separate the tests in a diffrent class to enhance the ability to test the send_notification method in diffrent scenarios.
 
     """
 
@@ -96,4 +96,17 @@ class TestSendNotification(unittest.TestCase):
 
         mock_print.assert_called_with(expected_message)
 
+    @patch('builtins.print')
+    def test_below_threshold_notiicatio(self, mock_print):
+        threshold = 100
+        #Arrange
+        self.account.withdraw(9950)
+
+        #Act
+        self.account.send_notification()
+
+        #Assert
+        expected_message = f"Notification: Your account balance is below ${threshold}."
+
+        mock_print.assert_called_with(expected_message)
 

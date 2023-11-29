@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
-from Alpha import BankAccount, BankCustomer
+from Alpha import BankAccount
+from Alpha import BankCustomer
 
 class BankInterface:
     def __init__(self, master):
@@ -111,6 +112,7 @@ class BankInterface:
 
         elif amount < 10:
             messagebox.showerror("Unsuccessful", f"Deposit of ${amount} is below the minimum (USD 10)")
+
             self.entry_customer_id.delete(0, 'end')
 
         else:
@@ -131,6 +133,7 @@ class BankInterface:
         account_number = self.entry_account_number.get()
         customer_id = self.entry_customer_id.get()
         amount = 0.0  # Initialize with a default value
+        threshold = 100
 
         #Validate Input
         try:
@@ -160,6 +163,9 @@ class BankInterface:
             if amount >= 5000:
                 self.display_notification(f" A large amount of ${amount} was successfully withdrawn from your account.") #Inform the customer of large withdrawls from their account
 
+            if self.selected_account.account_balance <= threshold:
+                self.display_notification(f"Warning!, Dear {self.selected_account.account_holder} your account balance is bellow ${threshold}")
+
             messagebox.showinfo("Success", f"Withdrawal of ${amount} was a success. Your new account balance is: ${self.selected_account.account_balance}")
 
             self.entry_customer_id.delete(0, 'end')
@@ -176,6 +182,8 @@ class BankInterface:
 
         elif customer_id != self.selected_account.customer_id:
             messagebox.showerror("Wrong Pin", "Cannot proceed to check balance. You entered a wrong Pin")
+
+            self.entry_customer_id.delete(0, 'end')
 
         else:
             self.selected_account.checkBalance()
@@ -195,6 +203,8 @@ class BankInterface:
 
         elif customer_id != self.selected_account.customer_id:
             messagebox.showerror("Wrong Pin", f"Cannot proceed to show account transaction You entered a wrong pin!")
+
+            self.entry_customer_id.delete(0, 'end')
 
         else:
             transaction_history = self.selected_account.get_transaction_history()
