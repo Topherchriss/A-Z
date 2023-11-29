@@ -11,6 +11,31 @@ class BankAccount:
         self.customer_id = customer_id
         self.account_balance = default_balance
         self.transaction_history = []
+        self.budget_caterogies = {}
+
+    def set_budget(self, category, limit):
+        self.budget_caterogies[category] = limit
+
+    def budget_spending(self, category, amount):
+        if category not in self.budget_caterogies:
+            print(f"Dear {self.account_holder} category: {category} not set!")
+            return
+
+        if amount > 0:
+            self.account_balance -= amount
+
+            #check aganist budget limit
+            if amount > self.budget_caterogies[category]:
+                print(f"Dear {self.account_holder} you have exceded your budget for {category}")
+
+            self.transaction_history.append({"Type of transaction": "Expense", "Category": category, "Amount spent": amount})
+
+            self.send_notification()
+            print(f"Expense of {amount} from {category} was successful. Your new balance is {
+                self.account_balance}")
+        else:
+            print(f"Invalid expense amount {amount}. Please insert a positive value")
+            return
 
 
     def deposit(self, amount):
@@ -65,6 +90,8 @@ class BankAccount:
         if self.account_balance <= 100:
             print(f"Notification: Your account balance is below ${threshold}.")
 
+
+
 class BankCustomer:
 
     def __init__(self, customer_name):
@@ -88,6 +115,11 @@ class BankCustomer:
 
     def __str__(self):
         return str(self.accounts)
+
+"""
+To effectivley deal with module dependancies and avoid potential errors i decided to import a module when and only when it's needed during execution
+
+"""
 
 import unittest
 

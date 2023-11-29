@@ -110,3 +110,59 @@ class TestSendNotification(unittest.TestCase):
 
         mock_print.assert_called_with(expected_message)
 
+
+class TestBudgetCategory(unittest.TestCase):
+
+    def setUp(self):
+        # Call this method before each test
+        self.account = BankAccount(account_number="1000101", account_holder="Jean Maswa", customer_id="1456", default_balance=10000)
+
+    @patch('builtins.print')
+    def test_no_set_category(self, mock_print):
+        #Arrange
+        self.account.set_budget(category="Shoping", limit=700)
+
+        #Act
+        self.account.budget_spending(category="School", amount=300)
+
+        #Assert
+        expected_message = f"Dear Jean Maswa category: School not set!"
+
+        mock_print.assert_called_with(expected_message)
+
+
+    @patch('builtins.print')
+    def test_budget_exceed(self, mock_print):
+        #Arrange
+        self.account.set_budget(category="Enta", limit=100)
+
+        #Act
+        self.account.budget_spending(category="Enta", amount=5000)
+
+        #Assert
+        self.account.send_notification()
+        expected_message = f"Expense of 5000 from Enta was successful. Your new balance is 5000"
+
+        mock_print.assert_called_with(expected_message)
+
+
+    @patch("builtins.print")
+    def test_normal_budget_spending(self, mock_print):
+
+        self.account.set_budget(category="sports", limit=2000)
+
+        self.account.budget_spending(category="sports", amount=1000)
+
+        expected_message = f"Expense of 1000 from sports was successful. Your new balance is 9000"
+
+        mock_print.assert_called_with(expected_message)
+
+    @patch('builtins.print')
+    def test_invalid_amount(self, mock_print):
+        self.account.set_budget(category="vip", limit=4000)
+
+        self.account.budget_spending(category="vip", amount=-3000)
+
+        expected_message = "Invalid expense amount -3000. Please insert a positive value"
+
+        mock_print.assert_called_with(expected_message)

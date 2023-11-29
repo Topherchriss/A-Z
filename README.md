@@ -137,5 +137,6 @@ This project is licensed under general Public License - see the LICENSE file for
 
 ### Acknowledgments
 . Special thanks to **tkinter** for providing  the  GUI framework.
-. Inspired by the idea of implementing OOP principles that i'm currently learning.
+. Special thanks to **Cisco skills for all** for the well structured Python lessons.
+. Inspired by the idea of implementing OOP principles that i'm currently learning at **Cisco skills for all**.
 
