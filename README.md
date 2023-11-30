@@ -93,7 +93,8 @@ Feel free to use these accounts to explore the application's features.
 
 ### Contributing
 
-We welcome and appreciate constructive contributions to A-Z TRAPEZA! To get started, follow the steps below:
+Constructive contributions are welcomed and highly appreciated! 
+To get started
 
 1. **Fork the Repository:**
 
