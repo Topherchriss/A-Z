@@ -1,5 +1,4 @@
 import unittest
-from unittest.mock import patch
 from Alpha import BankAccount
 
 
@@ -9,7 +8,6 @@ class TestTrapeza(unittest.TestCase):
     def setUp(self):
         # Call this method before each test
         self.account = BankAccount(account_number="1000101", account_holder="Jean Maswa", customer_id="1456", default_balance=10000)
-
 
     def test_default_balance(self):
         self.assertEqual(self.account.account_balance, 10000, "Default balance should be $1000")
@@ -48,10 +46,8 @@ class TestTrapeza(unittest.TestCase):
         trans = self.account.get_transaction_history()
         self.assertEqual(len(trans), 4, "Transaction history should have four entities")
 
-    """
-    testing notifications proved to be a tricky challenge so i decided to use this approach and separate the tests in a diffrent class to enhance the ability to test the send_notification method in diffrent scenarios.
 
-    """
+from unittest.mock import patch
 
 class TestSendNotification(unittest.TestCase):
 
@@ -157,6 +153,7 @@ class TestBudgetCategory(unittest.TestCase):
 
         mock_print.assert_called_with(expected_message)
 
+
     @patch('builtins.print')
     def test_invalid_amount(self, mock_print):
         self.account.set_budget(category="vip", limit=4000)
@@ -164,5 +161,42 @@ class TestBudgetCategory(unittest.TestCase):
         self.account.budget_spending(category="vip", amount=-3000)
 
         expected_message = "Invalid expense amount -3000. Please insert a positive value"
+
+        mock_print.assert_called_with(expected_message)
+
+
+
+    @patch('builtins.print')
+    def test_excess_than_limit(self, mock_print):
+        self.account.set_budget(category="BILLS", limit=300)
+
+        self.account.get_expense(category="BILLS", amount=700)
+
+        expected_message = "Exceeding budget limit"
+
+        mock_print.assert_called_with(expected_message)
+
+
+    @patch('builtins.print')
+    def test_normal_expense(self, mock_print):
+
+        self.account.set_budget(category="BILLS", limit=1000)
+
+        self.account.get_expense(category="BILLS", amount=500)
+
+        self.account.send_notification()
+        expected_message = "You have succesfully spent 500 form category BILLS"
+
+        mock_print.assert_called_with(expected_message)
+
+
+    @patch('builtins.print')
+    def test_expense_but_no_category(self, mock_print):
+
+        self.account.set_budget(category="A", limit=300)
+
+        self.account.get_expense(category="a", amount=200)
+
+        expected_message = "Category 'a' not found in budget."
 
         mock_print.assert_called_with(expected_message)

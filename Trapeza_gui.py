@@ -13,12 +13,18 @@ class BankInterface:
         self.label_account_number = tk.Label(master, text="Customer's account number:")
         self.label_amount = tk.Label(master, text="Amount:")
         self.label_customer_id = tk.Label(master, text="Enter your pin:")
+        self.label_budget_category = tk.Label(master, text="Budget Category:")
+        self.label_budget_limit = tk.Label(master, text="Budget Limit:")
+        self.label_balance = tk.Label(master, text="Current Balance: $0.00")
+
 
         #Entry fields
         self.entry_customer_name = tk.Entry(master)
         self.entry_account_number= tk.Entry(master)
         self.entry_amount = tk.Entry(master)
         self.entry_customer_id = tk.Entry(master)
+        self.entry_budget_category = tk.Entry(master)
+        self.entry_budget_limit = tk.Entry(master)
 
 
         #Buttons
@@ -26,9 +32,11 @@ class BankInterface:
         self.button_withdraw = tk.Button(master, text="Withdraw", command=self.withdraw_cash)
         self.button_transactions = tk.Button(master, text="Transactions", command=self.show_transactions)
         self.button_balance = tk.Button(master, text="Check Balance", command=self.check_balance)
+        self.button_set_budget = tk.Button(master, text="Set Budget", command=self.set_budget)
+        self.button_spend_budget = tk.Button(master, text="Spend_budget", command=self.spend_budget)
 
 
-        #Grid layoutP
+        #Grid layout
         self.label_customer_name.grid(row=0, column=0, padx=10, pady=10)
         self.entry_customer_name.grid(row=0, column=1, padx=10, pady=10)
         self.label_account_number.grid(row=1, column=0, padx=10, pady=10)
@@ -41,14 +49,16 @@ class BankInterface:
         self.button_withdraw.grid(row=5, column=0, columnspan=2, pady=10)
         self.button_transactions.grid(row=6, column=0, columnspan=2, pady=10)
         self.button_balance.grid(row=7, column=0, columnspan=2, pady=10)
-
-        #show updated balance on the GUI
-        self.label_balance = tk.Label(master, text="Current Balance: $0.00")
         self.label_balance.grid(row=8, column=0, columnspan=2, pady=10)
+        self.label_budget_category.grid(row=10, column=0, padx=10, pady=10)
+        self.entry_budget_category.grid(row=10, column=1, padx=10, pady=10)
+        self.label_budget_limit.grid(row=11, column=0, padx=10, pady=10)
+        self.entry_budget_limit.grid(row=11, column=1, padx=10, pady=10)
+        self.button_set_budget.grid(row=12, column=0, columnspan=2, pady=10)
+        self.button_spend_budget.grid(row=12, column=1, columnspan=2, pady=10)
 
-        # Notification area on GUI
-        self.notification_text = tk.Text(master, height=2, width=40)
-        self.notification_text.grid(row=9, column=0, columnspan=2, pady=20)
+
+        self.notification_text = tk.Text(master, height=4, width=100)
 
         #Create Three customers
         self.customer1 = BankCustomer(customer_name="Jean Maswa")
@@ -215,3 +225,63 @@ class BankInterface:
                 messagebox.showinfo("Transactions", f"{customer_name}'s transaction history:\n{formatted_transactions}")
 
                 self.entry_customer_id.delete(0, 'end')
+
+    def set_budget(self):
+        customer_id = self.entry_customer_id.get()
+        category = self.entry_budget_category.get()
+        try:
+            limit = float(self.entry_budget_limit.get())
+        except ValueError:
+            messagebox.showerror("Error", "Cannot proceed.Invalid limit amount!")
+
+        if customer_id != self.selected_account.customer_id:
+            messagebox.showerror("Wrong Pin", f"Cannot proceed to set budget category. You entered a wrong pin!")
+
+        elif limit < 1 or limit > self.selected_account.account_balance or limit == '':
+            messagebox.showerror("Unsuccessful", f"Invalid limit input {limit}!")
+
+        else:
+            self.selected_account.set_budget(category, limit)
+            messagebox.showinfo("Success", f"Dear {self.selected_account.account_holder} a budget category of {category} with a limit of ${limit} was added on your acccount. Thank you for keeping it A-Z!")
+
+            self.entry_customer_id.delete(0, 'end')
+
+    def spend_budget(self):
+        category = self.entry_budget_category.get()
+        customer_id = self.entry_customer_id.get()
+        amount = 0.0
+        limit = float(self.entry_budget_limit.get())
+
+        try:
+            amount = float(self.entry_amount.get())
+        except ValueError:
+            messagebox.showerror("Invalid", "Invalid amount!")
+
+
+
+        if customer_id != self.selected_account.customer_id:
+            messagebox.showerror("Wrong PIN", "Cannot proceed. You entered the wrong PIN")
+
+        elif category not in self.selected_account.budget_categories:
+            messagebox.showerror("Error", f"Cannot proceed, category {category} not found!")
+
+        elif amount < 10:
+            messagebox.showerror("Error", f"Cannot proceed, amount {amount} must be more than or equal to $10")
+
+        elif amount > limit:
+            messagebox.showerror("Error", f"Dear {self.selected_account.account_holder} ${amount} exceeds budget allocation of ${limit}")
+
+        else:
+        # Check if the category exists in cumulative_expenses, if not, initialize it
+            if category not in self.selected_account.cumulative_expenses:
+                self.selected_account.cumulative_expenses[category] = 0
+
+            elif amount + self.selected_account.cumulative_expenses[category] > limit:
+                messagebox.showerror("Warning", "Exceeding budget limit")
+
+            else:
+                self.selected_account.get_expense(category, amount)
+                messagebox.showinfo("Success", f"Dear {self.selected_account.account_holder}, you have spent {amount} from {category} budget. Your balance is {self.selected_account.account_balance}")
+
+                self.entry_customer_id.delete(0, 'end')
+

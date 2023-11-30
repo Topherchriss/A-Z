@@ -1,8 +1,3 @@
-#import unittest
-#import tkinter as tk
-#from tkinter import messagebox
-#from Trapeza_gui import BankInterface
-
 class BankAccount:
     def __init__(self, account_number, account_holder, customer_id, default_balance = 0):
 
@@ -11,13 +6,15 @@ class BankAccount:
         self.customer_id = customer_id
         self.account_balance = default_balance
         self.transaction_history = []
-        self.budget_caterogies = {}
+        self.budget_categories = {}
+        self.cumulative_expenses = {}
 
     def set_budget(self, category, limit):
-        self.budget_caterogies[category] = limit
+        self.budget_categories[category] = limit
 
     def budget_spending(self, category, amount):
-        if category not in self.budget_caterogies:
+
+        if category not in self.budget_categories:
             print(f"Dear {self.account_holder} category: {category} not set!")
             return
 
@@ -25,7 +22,7 @@ class BankAccount:
             self.account_balance -= amount
 
             #check aganist budget limit
-            if amount > self.budget_caterogies[category]:
+            if amount > self.budget_categories[category]:
                 print(f"Dear {self.account_holder} you have exceded your budget for {category}")
 
             self.transaction_history.append({"Type of transaction": "Expense", "Category": category, "Amount spent": amount})
@@ -90,6 +87,33 @@ class BankAccount:
         if self.account_balance <= 100:
             print(f"Notification: Your account balance is below ${threshold}.")
 
+    def get_expense(self, category, amount):
+
+        if category not in self.budget_categories:
+            print(f"Category '{category}' not found in budget.")
+            return
+
+        if category not in self.cumulative_expenses:
+            self.cumulative_expenses[category] = 0
+
+        limit = self.budget_categories[category]
+
+        if amount + self.cumulative_expenses[category] > limit:
+            print("Exceeding budget limit")
+            return
+
+
+        else:
+            self.account_balance -= amount
+
+            self.budget_categories[category] -= amount
+
+            self.cumulative_expenses[category] += amount  # Increment cumulative expenses
+
+            print(f"You have succesfully spent {amount} form category {category}")
+
+            self.transaction_history.append({"Type of transaction": "Expense", "Category": category, "Amount spent": amount})
+            self.send_notification()
 
 
 class BankCustomer:
