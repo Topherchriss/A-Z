@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 from Alpha import BankAccount
 from Alpha import BankCustomer
+from Extras import Calc
 
 class BankInterface:
     def __init__(self, master):
@@ -12,7 +13,7 @@ class BankInterface:
         self.label_customer_name = tk.Label(master, text="Customer's Name:")
         self.label_account_number = tk.Label(master, text="Customer's account number:")
         self.label_amount = tk.Label(master, text="Amount:")
-        self.label_customer_id = tk.Label(master, text="Enter your pin:")
+        self.label_customer_id = tk.Label(master, text="Enter your PIN:")
         self.label_budget_category = tk.Label(master, text="Budget Category:")
         self.label_budget_limit = tk.Label(master, text="Budget Limit:")
         self.label_balance = tk.Label(master, text="Current Balance: $0.00")
@@ -33,7 +34,8 @@ class BankInterface:
         self.button_transactions = tk.Button(master, text="Transactions", command=self.show_transactions)
         self.button_balance = tk.Button(master, text="Check Balance", command=self.check_balance)
         self.button_set_budget = tk.Button(master, text="Set Budget", command=self.set_budget)
-        self.button_spend_budget = tk.Button(master, text="Spend_budget", command=self.spend_budget)
+        self.button_spend_budget = tk.Button(master, text="Spend Budget", command=self.spend_budget)
+        self.button_calculator = tk.Button(master, text="Calculator", command=self.open_calc)
 
 
         #Grid layout
@@ -56,9 +58,11 @@ class BankInterface:
         self.entry_budget_limit.grid(row=11, column=1, padx=10, pady=10)
         self.button_set_budget.grid(row=12, column=0, columnspan=2, pady=10)
         self.button_spend_budget.grid(row=12, column=1, columnspan=2, pady=10)
+        self.button_calculator.grid(row=13, column=1, columnspan=2, pady=10)
 
 
-        self.notification_text = tk.Text(master, height=4, width=100)
+        self.notification_text = tk.Text(master, height=2, width=40)
+        self.notification_text.grid(row=14, column=0, columnspan=2, pady=20)
 
         #Create Three customers
         self.customer1 = BankCustomer(customer_name="Jean Maswa")
@@ -238,7 +242,7 @@ class BankInterface:
             messagebox.showerror("Wrong Pin", f"Cannot proceed to set budget category. You entered a wrong pin!")
 
         elif limit < 1 or limit > self.selected_account.account_balance or limit == '':
-            messagebox.showerror("Unsuccessful", f"Invalid limit input {limit}!")
+            messagebox.showerror("Unsuccessful", f"Invalid limit input ${limit}!")
 
         else:
             self.selected_account.set_budget(category, limit)
@@ -266,22 +270,80 @@ class BankInterface:
             messagebox.showerror("Error", f"Cannot proceed, category {category} not found!")
 
         elif amount < 10:
-            messagebox.showerror("Error", f"Cannot proceed, amount {amount} must be more than or equal to $10")
+            messagebox.showerror("Error", f"Cannot proceed, amount ${amount} must be more than or equal to $10")
 
         elif amount > limit:
             messagebox.showerror("Error", f"Dear {self.selected_account.account_holder} ${amount} exceeds budget allocation of ${limit}")
+
+
 
         else:
         # Check if the category exists in cumulative_expenses, if not, initialize it
             if category not in self.selected_account.cumulative_expenses:
                 self.selected_account.cumulative_expenses[category] = 0
 
+            elif category == "":
+                messagebox.showerror("Invalid", "Please provide a descriptive name for your budget!")
+
             elif amount + self.selected_account.cumulative_expenses[category] > limit:
                 messagebox.showerror("Warning", "Exceeding budget limit")
 
             else:
                 self.selected_account.get_expense(category, amount)
-                messagebox.showinfo("Success", f"Dear {self.selected_account.account_holder}, you have spent {amount} from {category} budget. Your balance is {self.selected_account.account_balance}")
+                messagebox.showinfo("Success", f"Dear {self.selected_account.account_holder}, you have spent ${amount} from {category} budget. You have ${self.selected_account.budget_categories[category]} before exceeding your limit of ${limit}")
 
                 self.entry_customer_id.delete(0, 'end')
 
+    def open_calc(self):
+        #Creating a window for the calculator pop up
+
+        calc_window = tk.Toplevel(self.master)
+        calc_window.title("Calculator")
+
+        #entry fields for the calculator input
+        entry_calc = tk.Entry(calc_window)
+        entry_calc.grid(row=0, column=0, columnspan=4)
+
+        # Calculator buttons
+        calc_buttons = [
+            ('7', 1, 0), ('8', 1, 1), ('9', 1, 2), ('/', 1, 3),
+            ('4', 2, 0), ('5', 2, 1), ('6', 2, 2), ('*', 2, 3),
+            ('1', 3, 0), ('2', 3, 1), ('3', 3, 2), ('-', 3, 3),
+            ('0', 4, 0), ('.', 4, 1), ('=', 4, 2), ('+', 4, 3),
+            ('DEL', 5, 0),
+
+        ]
+
+         # Create calculator buttons
+        for (text, row, column) in calc_buttons:
+
+            if text == 'DEL':
+
+                button = tk.Button(calc_window, text=text, command=lambda: entry_calc.delete(len(entry_calc.get()) - 1, tk.END))
+            else:
+
+                button = tk.Button(calc_window, text=text, command=lambda t=text: entry_calc.insert(tk.END, t))
+            button.grid(row=row, column=column, sticky='nsew')
+
+
+        # Equal button action
+        def calculate():
+            try:
+                result = eval(entry_calc.get())
+                entry_calc.delete(0, tk.END)
+                entry_calc.insert(tk.END, str(result))
+                #entry_calc.delete(0, tk.END)
+            except Exception as e:
+                entry_calc.delete(0, tk.END)
+                entry_calc.insert(tk.END, "Error")
+                entry_calc.delete(0, tk.END)
+
+
+        # Create equal button separately
+        equal_button = tk.Button(calc_window, text='=', command=calculate)
+        equal_button.grid(row=4, column=2, columnspan=1, sticky='nsew')
+
+        # Configure grid layout
+        for i in range(5):
+            calc_window.grid_rowconfigure(i, weight=1)
+            calc_window.grid_columnconfigure(i, weight=1)

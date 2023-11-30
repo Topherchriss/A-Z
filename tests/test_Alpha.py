@@ -185,7 +185,7 @@ class TestBudgetCategory(unittest.TestCase):
         self.account.get_expense(category="BILLS", amount=500)
 
         self.account.send_notification()
-        expected_message = "You have succesfully spent 500 form category BILLS"
+        expected_message = "You have succesfully spent 500 form category BILLS remainig $500"
 
         mock_print.assert_called_with(expected_message)
 
@@ -200,3 +200,15 @@ class TestBudgetCategory(unittest.TestCase):
         expected_message = "Category 'a' not found in budget."
 
         mock_print.assert_called_with(expected_message)
+
+    @patch('builtins.print')
+    def test_limit_after_spending(self, mock_print):
+
+        self.account.set_budget(category="A", limit=500)
+
+        self.account.get_expense(category='A', amount=300)
+
+        expected_message = "You have succesfully spent 300 form category A remainig $200"
+
+        mock_print.assert_called_with(expected_message)
+

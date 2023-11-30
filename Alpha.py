@@ -106,14 +106,17 @@ class BankAccount:
         else:
             self.account_balance -= amount
 
-            self.budget_categories[category] -= amount
-
             self.cumulative_expenses[category] += amount  # Increment cumulative expenses
 
-            print(f"You have succesfully spent {amount} form category {category}")
+            limit_after_spending = self.budget_categories[category] - amount
+            self.budget_categories[category] -= amount
+
+            print(f"You have succesfully spent {amount} form category {category} remainig ${limit_after_spending}")
 
             self.transaction_history.append({"Type of transaction": "Expense", "Category": category, "Amount spent": amount})
             self.send_notification()
+
+            return limit_after_spending
 
 
 class BankCustomer:
