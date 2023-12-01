@@ -4,9 +4,39 @@ from Alpha import BankAccount
 
 class TestTrapeza(unittest.TestCase):
 
+    """
+    Test cases for the BankAccount class in the Alpha module.
+
+    Methods:
+        setUp(self) -> None:
+            Set up a BankAccount instance for testing.
+
+        test_default_balance(self) -> None:
+            Test the default balance of a BankAccount.
+
+        test_deposit(self) -> None:
+            Test the deposit method of a BankAccount.
+
+        test_invalid_deposit(self) -> None:
+            Test handling invalid deposit amounts in a BankAccount.
+
+        test_withdrawal(self) -> None:
+            Test the withdrawal method of a BankAccount.
+
+        test_less_funds(self) -> None:
+            Test handling withdrawal with insufficient funds in a BankAccount.
+
+        test_invalid_withdrawal(self) -> None:
+            Test handling invalid withdrawal amounts in a BankAccount.
+
+        test_trans_history(self) -> None:
+            Test the transaction history of a BankAccount.
+
+    """
+
 
     def setUp(self):
-        # Call this method before each test
+        # Set up a BankAccount instance for testing
         self.account = BankAccount(account_number="1000101", account_holder="Jean Maswa", customer_id="1456", default_balance=10000)
 
     def test_default_balance(self):
@@ -52,8 +82,29 @@ from unittest.mock import patch
 
 class TestSendNotification(unittest.TestCase):
 
+    """
+    Test cases for the send_notification method in the BankAccount class.
+
+    Methods:
+        setUp(self) -> None:
+            Set up a BankAccount instance for testing notifications.
+
+        test_large_deposit_notification(self, mock_print) -> None:
+            Test sending a notification for a large deposit.
+
+        test_large_withdrawal_notification(self, mock_print) -> None:
+            Test sending a notification for a large withdrawal.
+
+        test_no_notification(self, mock_print) -> None:
+            Test sending no notification for a regular transaction.
+
+        test_below_threshold_notification(self, mock_print) -> None:
+            Test sending a notification for an account below a threshold.
+
+    """
+
     def setUp(self):
-        # Call this method before each test
+        # Set up a BankAccount instance for testing
         self.account = BankAccount(account_number="1000101", account_holder="Jean Maswa", customer_id="1456", default_balance=10000)
 
     @patch('builtins.print')
@@ -110,8 +161,49 @@ class TestSendNotification(unittest.TestCase):
 
 class TestBudgetCategory(unittest.TestCase):
 
+    """
+    Test cases for budget-related methods in the BankAccount class.
+
+    Methods:
+        setUp(self) -> None:
+            Set up a BankAccount instance for testing budgets.
+
+        test_no_set_category(self, mock_print) -> None:
+            Test handling budget spending for an unset category.
+
+        test_budget_exceed(self, mock_print) -> None:
+            Test handling budget exceedance.
+
+        test_normal_budget_spending(self, mock_print) -> None:
+            Test normal budget spending.
+
+        test_invalid_amount(self, mock_print) -> None:
+            Test handling invalid budget spending amounts.
+
+        test_excess_than_limit(self, mock_print) -> None:
+            Test exceeding the budget limit.
+
+        test_normal_expense(self, mock_print) -> None:
+            Test normal expense within budget.
+
+        test_expense_but_no_category(self, mock_print) -> None:
+            Test handling expense with an undefined category.
+
+        test_limit_after_spending(self, mock_print) -> None:
+            Test remaining budget limit after spending.
+
+        test_set_threshold(self, mock_print) -> None:
+            Test setting a threshold for the account balance.
+
+        test_set_threshold_invalid_amount(self, mock_print) -> None:
+            Test handling invalid threshold amounts.
+
+        test_set_threshold_above_balance(self, mock_print) -> None:
+            Test setting a threshold above the account balance.
+    """
+
     def setUp(self):
-        # Call this method before each test
+        # Set up a BankAccount instance for testing
         self.account = BankAccount(account_number="1000101", account_holder="Jean Maswa", customer_id="1456", default_balance=10000)
 
     @patch('builtins.print')
@@ -224,7 +316,7 @@ class TestBudgetCategory(unittest.TestCase):
         mock_print.assert_called_with(expected_message)
 
     @patch('builtins.print')
-    def test_set_threshold(self, mock_print):
+    def test_set_threshold_invalid_amount(self, mock_print):
 
         self.account.set_threshold(-600)
 
