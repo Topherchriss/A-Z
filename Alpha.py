@@ -214,13 +214,14 @@ class BankCustomer:
         self.accounts = []
 
     def addAccount(self, account):
-         """
+
+        """
         Add a bank account to the customer's profile.
 
         Parameters:
             account (BankAccount): The bank account to be added.
-        """
 
+        """
         self.accounts.append(account)
 
         print(f"Account {account.account_number} added for {self.customer_name}. Thank you for choosing our bank.")

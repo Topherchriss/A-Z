@@ -2,9 +2,44 @@
   "account_number": "1000101",
   "account_holder": "Jean Maswa",
   "customer_id": "1456",
-  "account_balance": 10000,
-  "transaction_history": [],
-  "budget_categories": {},
-  "cumulative_expenses": {},
-  "threshold": 0.0
+  "account_balance": 500250.0,
+  "transaction_history": [
+    {
+      "Type of transaction": "Deposit",
+      "Amount deposited": 50000.0
+    },
+    {
+      "Type of transaction": "withdrawal",
+      "Amount withdrawn": 67.0
+    },
+    {
+      "Type of transaction": "Expense",
+      "Category": "Shool fees",
+      "Amount spent": 670.0
+    },
+    {
+      "Type of transaction": "Expense",
+      "Category": "Books",
+      "Amount spent": 13.0
+    },
+    {
+      "Type of transaction": "withdrawal",
+      "Amount withdrawn": 49000.0
+    },
+    {
+      "Type of transaction": "Deposit",
+      "Amount deposited": 490000.0
+    }
+  ],
+  "budget_categories": {
+    "Books": 287.0,
+    "Groceries": 900.0,
+    "Car Fix": 1200.0,
+    "Shool fees": 160.0
+  },
+  "cumulative_expenses": {
+    "Shool fees": 670.0,
+    "Books": 13.0
+  },
+  "threshold": 16900.5
 }

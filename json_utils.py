@@ -2,7 +2,7 @@ import json
 from Alpha import BankAccount
 
 def save_bank_account_data(account, filename):
-     """
+    """
     Save the data of a BankAccount instance to a JSON file.
 
     Parameters:
