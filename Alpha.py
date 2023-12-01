@@ -1,5 +1,56 @@
 class BankAccount:
+
+    """
+    A class representing a bank account.
+
+    Attributes:
+        account_number (str): The account number associated with the account.
+        account_holder (str): The name of the account holder.
+        customer_id (str): The unique identifier of the customer.
+        default_balance (float): The initial balance of the account.
+
+    Methods:
+        deposit(amount: float) -> None:
+            Deposit a specified amount into the account.
+
+        withdraw(amount: float) -> None:
+            Withdraw a specified amount from the account.
+
+        check_balance() -> float:
+            Get the current balance of the account.
+
+        get_transaction_history() -> list:
+            Retrieve the transaction history of the account.
+
+        send_notification() -> None:
+            Send a notification to the account holder based on account activity.
+
+        set_threshold(threshold: float) -> None:
+            Set a threshold amount for the account.
+
+        set_budget(category: str, limit: float) -> None:
+            Set a budget limit for a specific spending category.
+
+        budget_spending(category: str, amount: float) -> None:
+            Record an expense for a specific spending category.
+
+        get_expense(category: str, amount: float) -> None:
+            Record an expense for a specific spending category and update the balance.
+
+    """
+
+
     def __init__(self, account_number="", account_holder="", customer_id="", default_balance = 0):
+
+        """
+        Initialize a new BankAccount instance.
+
+        Parameters:
+            account_number (str): The account number associated with the account.
+            account_holder (str): The name of the account holder.
+            customer_id (str): The unique identifier of the customer.
+            default_balance (float): The initial balance of the account.
+        """
 
         self.account_number = account_number
         self.account_holder = account_holder
@@ -144,13 +195,31 @@ class BankAccount:
 
 class BankCustomer:
 
+    """
+    A class representing a bank customer.
+
+    Attributes:
+        customer_name (str): The name of the customer.
+        accounts (list): List of associated bank accounts.
+
+    Methods:
+        addAccount(account: BankAccount) -> None:
+            Add a bank account to the customer's profile.
+
+    """
+
     def __init__(self, customer_name):
 
         self.customer_name = customer_name
         self.accounts = []
 
     def addAccount(self, account):
+         """
+        Add a bank account to the customer's profile.
 
+        Parameters:
+            account (BankAccount): The bank account to be added.
+        """
 
         self.accounts.append(account)
 
