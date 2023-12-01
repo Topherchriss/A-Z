@@ -173,15 +173,16 @@ class BankInterface:
         customer_id = self.entry_customer_id.get()
         amount = 0.0
         try:
-            threshold = float(self.entry_set_threshold.get())
+            threshold = float(self.entry_set_threshold.get()) if self.entry_set_threshold.get() else 0.0
         except ValueError:
             messagebox.showerror("Invalid", "Invalid Threshold amount")
-
+            return
 
         try:
             amount = float(self.entry_amount.get())
         except ValueError:
             messagebox.showerror("Invalid Amount", "Please enter a valid numeric amount to withdraw.")
+
 
         if customer_name != self.selected_account.account_holder or account_number != self.selected_account.account_number:
             messagebox.showerror("Unsuccessful", f"Cannot proceed to withdrawal, Customer not found!")
@@ -266,6 +267,7 @@ class BankInterface:
             limit = float(self.entry_budget_limit.get())
         except ValueError:
             messagebox.showerror("Error", "Cannot proceed.Invalid limit amount!")
+            return
 
         if customer_id != self.selected_account.customer_id:
             messagebox.showerror("Wrong Pin", f"Cannot proceed to set budget category. You entered a wrong pin!")
@@ -283,16 +285,13 @@ class BankInterface:
         category = self.entry_budget_category.get()
         customer_id = self.entry_customer_id.get()
         amount = 0.0
-        limit = 0.0
-        try:
-            limit = float(self.entry_budget_limit.get())
-        except ValueError:
-            messagebox.showerror("Invalid", "Invalid limit amount")
+
 
         try:
             amount = float(self.entry_amount.get())
         except ValueError:
             messagebox.showerror("Invalid", "Invalid amount!")
+            return
 
 
 
@@ -305,13 +304,11 @@ class BankInterface:
         elif amount < 10:
             messagebox.showerror("Error", f"Cannot proceed, amount ${amount} must be more than or equal to $10")
 
-        elif amount > limit:
-            messagebox.showerror("Error", f"Dear {self.selected_account.account_holder} ${amount} exceeds budget allocation of ${limit}")
-
-
 
         else:
-        # Check if the category exists in cumulative_expenses, if not, initialize it
+            limit = self.selected_account.budget_categories.get(category, 0.0) # Use the limit associated with the category
+
+            # Check if the category exists in cumulative_expenses, if not, initialize it
             if category not in self.selected_account.cumulative_expenses:
                 self.selected_account.cumulative_expenses[category] = 0
 
@@ -320,6 +317,9 @@ class BankInterface:
 
             elif amount + self.selected_account.cumulative_expenses[category] > limit:
                 messagebox.showerror("Warning", "Exceeding budget limit")
+
+            elif amount > limit:
+                messagebox.showerror("Error", f"Dear {self.selected_account.account_holder} ${amount} exceeds budget allocation of ${limit}")
 
             else:
                 self.selected_account.get_expense(category, amount)
@@ -335,6 +335,7 @@ class BankInterface:
             threshold = float(self.entry_set_threshold.get())
         except ValueError:
             messagebox.showerror("Invalid", "Cannot proceed to set threshold. You entered an invalid threshold amount")
+            return
 
 
         if customer_id != self.selected_account.customer_id or customer_id == '':

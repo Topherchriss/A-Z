@@ -2,7 +2,7 @@
   "account_number": "1000102",
   "account_holder": "Chachu Mulumba",
   "customer_id": "2567",
-  "account_balance": 1150.0,
+  "account_balance": 3590.0,
   "transaction_history": [
     {
       "Type of transaction": "Deposit",
@@ -54,15 +54,57 @@
     {
       "Type of transaction": "withdrawal",
       "Amount withdrawn": 500.0
+    },
+    {
+      "Type of transaction": "Deposit",
+      "Amount deposited": 5000.0
+    },
+    {
+      "Type of transaction": "Deposit",
+      "Amount deposited": 500.0
+    },
+    {
+      "Type of transaction": "withdrawal",
+      "Amount withdrawn": 500.0
+    },
+    {
+      "Type of transaction": "withdrawal",
+      "Amount withdrawn": 500.0
+    },
+    {
+      "Type of transaction": "withdrawal",
+      "Amount withdrawn": 500.0
+    },
+    {
+      "Type of transaction": "withdrawal",
+      "Amount withdrawn": 500.0
+    },
+    {
+      "Type of transaction": "withdrawal",
+      "Amount withdrawn": 500.0
+    },
+    {
+      "Type of transaction": "Expense",
+      "Category": "House",
+      "Amount spent": 500.0
+    },
+    {
+      "Type of transaction": "Expense",
+      "Category": "Car",
+      "Amount spent": 60.0
     }
   ],
   "budget_categories": {
     "Books": 150.0,
-    "School": 1000.0
+    "School": 1000.0,
+    "House": 200.0,
+    "Car": 440.0
   },
   "cumulative_expenses": {
     "Books": 350.0,
-    "School": 4000.0
+    "School": 4000.0,
+    "House": 500.0,
+    "Car": 60.0
   },
   "threshold": 50000.0
 }
