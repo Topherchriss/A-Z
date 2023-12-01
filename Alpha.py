@@ -10,6 +10,18 @@ class BankAccount:
         self.cumulative_expenses = {}
         self.threshold = 0.0
 
+    def to_json(self):
+        return {
+            "account_number": self.account_number,
+            "account_holder": self.account_holder,
+            "customer_id": self.customer_id,
+            "account_balance": self.account_balance,
+            "transaction_history": self.transaction_history,
+            "budget_categories": self.budget_categories,
+            "cumulative_expenses": self.cumulative_expenses,
+            "threshold": self.threshold
+        }
+
     def set_budget(self, category, limit):
         self.budget_categories[category] = limit
 
@@ -171,5 +183,9 @@ import tkinter as tk
 from Trapeza_gui import BankInterface
 
 root = tk.Tk()
+
 app = BankInterface(root)
+
+root.protocol("WM_DELETE_WINDOW", app.on_closing)# Set up an event handler for when the application is closed
+
 root.mainloop()

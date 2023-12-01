@@ -1,8 +1,9 @@
 import tkinter as tk
+from Extras import Calc
 from tkinter import messagebox
 from Alpha import BankAccount
 from Alpha import BankCustomer
-from Extras import Calc
+from json_utils import save_bank_account_data, load_bank_account_data
 
 class BankInterface:
     def __init__(self, master):
@@ -89,11 +90,28 @@ class BankInterface:
         self.selected_account = self.customer2_account
         self.update_display()
 
+        # Load the initial BankAccount data from the JSON file
+        try:
+            self.selected_account = load_bank_account_data("account_data.json")
+        except FileNotFoundError:
+            # If the file doesn't exist, create a default account
+            self.selected_account = BankAccount(account_number="1000102", account_holder="Chachu Mulumba", customer_id="2567", default_balance=1500)
+
+      # Method to save the BankAccount data to the JSON file
+    def save_account_data(self):
+        save_bank_account_data(self.selected_account, "account_data.json")
+
         # Method to update the GUI display based on the selected customer and account
     def update_display(self):
+        stored_balance = self.selected_account.account_balance if hasattr(self.selected_account, 'account_balance') else 0.0 # Initialize stored_balance to previous account balance or 0.0 if there is none
+
+        # Add the total of previous transactions to the stored balance
+        previous_transactions = sum(self.selected_account.transaction_history)
+        total_balance = stored_balance + previous_transactions
+
         self.label_customer_name.config(text=f"Customer's Name: {self.selected_customer.customer_name}")
         self.label_account_number.config(text=f"Customer's account number: {self.selected_account.account_number}")
-        self.label_balance.config(text=f"Current Balance: ${self.selected_account.account_balance:.2f}")
+        self.label_balance.config(text=f"Current Balance: ${total_balance:.2f}")
 
 
     # Method to switch customer and update the display
@@ -109,6 +127,7 @@ class BankInterface:
         self.notification_text.insert(tk.END, f"{message}\n") #insert message
         self.notification_text.config(state=tk.DISABLED) #Disable the widget from modification after inserting the message
         self.notification_text.see(tk.END)
+
 
     # Method to deposit
     def deposit_amount(self):
@@ -144,7 +163,7 @@ class BankInterface:
                 self.display_notification(f"A large deposit of ${amount} was made to your account.") #Notify the user of large deposit amounts
 
             messagebox.showinfo("Success", f"Deposit of ${amount} was succesful. New account balance: ${self.selected_account.account_balance}")
-
+            self.save_account_data()
             self.entry_customer_id.delete(0, 'end')
 
     # Method to withdraw
@@ -191,6 +210,7 @@ class BankInterface:
 
             messagebox.showinfo("Success", f"Withdrawal of ${amount} was a success. Your new account balance is: ${self.selected_account.account_balance}")
 
+            self.save_account_data()
             self.entry_customer_id.delete(0, 'end')
 
 
@@ -256,14 +276,18 @@ class BankInterface:
         else:
             self.selected_account.set_budget(category, limit)
             messagebox.showinfo("Success", f"Dear {self.selected_account.account_holder} a budget category of {category} with a limit of ${limit} was added on your acccount. Thank you for keeping it A-Z!")
-
+            self.save_account_data()
             self.entry_customer_id.delete(0, 'end')
 
     def spend_budget(self):
         category = self.entry_budget_category.get()
         customer_id = self.entry_customer_id.get()
         amount = 0.0
-        limit = float(self.entry_budget_limit.get())
+        limit = 0.0
+        try:
+            limit = float(self.entry_budget_limit.get())
+        except ValueError:
+            messagebox.showerror("Invalid", "Invalid limit amount")
 
         try:
             amount = float(self.entry_amount.get())
@@ -299,8 +323,8 @@ class BankInterface:
 
             else:
                 self.selected_account.get_expense(category, amount)
-                messagebox.showinfo("Success", f"Dear {self.selected_account.account_holder}, you have spent ${amount} from {category} budget. You have ${self.selected_account.budget_categories[category]} before exceeding your limit of ${limit}")
-
+                messagebox.showinfo("Success", f"Dear {self.selected_account.account_holder}, you have spent ${amount} from {category} budget. You budgt limit is ${limit}")
+                self.save_account_data()
                 self.entry_customer_id.delete(0, 'end')
 
 
@@ -325,6 +349,7 @@ class BankInterface:
         else:
             self.selected_account.set_threshold(threshold)
             messagebox.showinfo("succesful", f"Dear {self.selected_account.account_holder} a threshold of ${threshold} was set for account {self.selected_account.account_number}. Thank you for keeping it A-Z")
+            self.save_account_data()
 
     def open_calc(self):
         #Creating a window for the calculator pop up
@@ -379,3 +404,10 @@ class BankInterface:
         for i in range(5):
             calc_window.grid_rowconfigure(i, weight=1)
             calc_window.grid_columnconfigure(i, weight=1)
+
+
+    #save the account data when the application is closed
+    def on_closing(self):
+        # Save the account data before closing the application
+        self.save_account_data()
+        self.master.destroy()
