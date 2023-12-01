@@ -9,18 +9,21 @@ A-Z TRAPEZA is a simple banking system application built with Python and the tki
 ## Features
 
 - **Account Management:** Users can create and manage multiple bank accounts.
+- **Budget Management:** Set spending limits for specific categories, track expenses, and receive notifications for budget thresholds.
 - **Deposit:** Make deposits into the selected account with a customizable notification for large deposits.
 - **Withdrawal:** Perform withdrawals with balance validation and notifications for large withdrawals.
 - **Check Balance:** View the current balance of the selected account.
 - **Transaction History:** Access a detailed transaction history for the selected account.
-- **Graphical User Interface:** User-friendly interface for easy interaction.
+- **Graphical User Interface:** User-friendly interface intergrated with a basic **calculator** for quick calculations and easy interaction.
 
 ## Getting Started
+
+Follow the installation instructions below to set up the A-Z TRAPEZA banking system on your local machine.
 
 ### Prerequisites
 
 - Python (version 3.X.X)
-- tkinter library (comes with Python ofcourse)
+- tkinter library (comes with Python)
 
 ### Installation
 
@@ -36,7 +39,7 @@ Clone the repository:
 
 ## Running Tests
 
-To ensure the stability and functionality of A-Z TRAPEZA, i have included a set of tests. These tests cover various aspects of the application, including deposit, withdrawal, balance checking, and transaction history.
+Ensure the stability and functionality of A-Z TRAPEZA by running a set of comprehensive tests. These tests cover various aspects of the application, including deposit, withdrawal, balance checking, transaction history, and the newly added budget management features
 
 ### Prerequisites
 
@@ -62,7 +65,7 @@ Run the application using the provided script ('python Alpha.py').
 
 2. ## Pre-loaded Test Accounts
 
-For your convenience, the application comes pre-loaded with three test accounts. These accounts are meant for testing and demonstration purposes only. Do not use real or sensitive information.
+For testing and demonstration purposes, three pre-loaded test accounts are available. Use these accounts to explore the application's features.
 
 1. **Account 1**
    - Customer Name: Jean Maswa
@@ -81,8 +84,6 @@ For your convenience, the application comes pre-loaded with three test accounts.
    - Account Number: 1000103
    - Customer ID (PIN): 3678
    - Default Balance: $2000.00
-
-Feel free to use these accounts to explore the application's features.
 
 **Important:** These accounts are not real, and any changes made will not have any impact on actual bank accounts or financial transactions. Do not use real information for testing purposes.
 
@@ -122,8 +123,7 @@ commit and push your changes using descriptive commit names
 
 5. ***Submit a Pull Request***
 
-Go to your fork on GitHub and open a pull request.
-Provide a clear description of your changes and the problem they address.
+Open a pull request on GitHub with clear descriptions of your changes.
 
 6. ***Collaborate***:
 

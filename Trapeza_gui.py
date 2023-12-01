@@ -7,7 +7,67 @@ from Alpha import BankCustomer
 from json_utils import save_bank_account_data, load_bank_account_data
 
 class BankInterface:
+    """
+    A graphical user interface for the A-Z TRAPEZA banking system.
+
+    Methods:
+        __init__(self, master: tk.Tk) -> None:
+            Initialize the BankInterface.
+
+        save_account_data(self) -> None:
+            Save the BankAccount data to the JSON file.
+
+        update_display(self) -> None:
+            Update the GUI display based on the selected customer and account.
+
+        switch_customer(self, customer: BankCustomer) -> None:
+            Switch the selected customer and update the display.
+
+        display_notification(self, message: str) -> None:
+            Display notifications in the GUI.
+
+        deposit_amount(self) -> None:
+            Process a deposit transaction.
+
+        withdraw_cash(self) -> None:
+            Process a withdrawal transaction.
+
+        check_balance(self) -> None:
+            Check and display the account balance.
+
+        show_transactions(self) -> None:
+            Display the transaction history.
+
+        set_budget(self) -> None:
+            Set a budget for a specific spending category.
+
+        spend_budget(self) -> None:
+            Record an expense for a specific spending category.
+
+        set_threshold(self) -> None:
+            Set a threshold for the account balance.
+
+        open_calc(self) -> None:
+            Open a calculator window.
+
+        clear_account_data(self) -> None:
+            Clear the account data stored in the JSON file only with valid customer_id.
+
+        on_closing(self) -> None:
+            Save the account data before closing the application.
+
+    """
+
+
     def __init__(self, master):
+
+        """
+        Initialize the BankInterface.
+
+        Parameters:
+            master (tk.Tk): The master tkinter window.
+        """
+
         self.master = master
         self.master.title("A-Z TRAPEZA")
 
