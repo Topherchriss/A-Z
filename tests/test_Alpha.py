@@ -47,6 +47,7 @@ class TestTrapeza(unittest.TestCase):
         self.assertEqual(len(trans), 4, "Transaction history should have four entities")
 
 
+
 from unittest.mock import patch
 
 class TestSendNotification(unittest.TestCase):
@@ -93,16 +94,16 @@ class TestSendNotification(unittest.TestCase):
         mock_print.assert_called_with(expected_message)
 
     @patch('builtins.print')
-    def test_below_threshold_notiicatio(self, mock_print):
-        threshold = 100
+    def test_below_threshold_notification(self, mock_print):
         #Arrange
-        self.account.withdraw(9950)
+        self.account.set_threshold(9000)
+        self.account.withdraw(1500)
 
         #Act
         self.account.send_notification()
 
         #Assert
-        expected_message = f"Notification: Your account balance is below ${threshold}."
+        expected_message = f"Notification: Your account balance is below $9000."
 
         mock_print.assert_called_with(expected_message)
 
@@ -201,6 +202,7 @@ class TestBudgetCategory(unittest.TestCase):
 
         mock_print.assert_called_with(expected_message)
 
+
     @patch('builtins.print')
     def test_limit_after_spending(self, mock_print):
 
@@ -209,6 +211,33 @@ class TestBudgetCategory(unittest.TestCase):
         self.account.get_expense(category='A', amount=300)
 
         expected_message = "You have succesfully spent 300 form category A remainig $200"
+
+        mock_print.assert_called_with(expected_message)
+
+    @patch('builtins.print')
+    def test_set_threshold(self, mock_print):
+
+        self.account.set_threshold(288)
+
+        expected_message = "Dear Jean Maswa a threshold of $288 was succesfully added for account 1000101"
+
+        mock_print.assert_called_with(expected_message)
+
+    @patch('builtins.print')
+    def test_set_threshold(self, mock_print):
+
+        self.account.set_threshold(-600)
+
+        expected_message = "Invalid threshold value provided"
+
+        mock_print.assert_called_with(expected_message)
+
+    @patch('builtins.print')
+    def test_set_threshold_above_balance(self, mock_print):
+
+        self.account.set_threshold(15000)
+
+        expected_message = "Threshold amount cannot exceded current account balance"
 
         mock_print.assert_called_with(expected_message)
 

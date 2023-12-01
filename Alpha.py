@@ -8,6 +8,7 @@ class BankAccount:
         self.transaction_history = []
         self.budget_categories = {}
         self.cumulative_expenses = {}
+        self.threshold = 0.0
 
     def set_budget(self, category, limit):
         self.budget_categories[category] = limit
@@ -83,9 +84,8 @@ class BankAccount:
                 print("Notification: A large withdrawal was made from your account.")
 
         # Check balance threshold
-        threshold = 100
-        if self.account_balance <= 100:
-            print(f"Notification: Your account balance is below ${threshold}.")
+        if self.account_balance <= self.threshold:
+            print(f"Notification: Your account balance is below ${self.threshold}.")
 
     def get_expense(self, category, amount):
 
@@ -118,6 +118,17 @@ class BankAccount:
 
             return limit_after_spending
 
+
+    def set_threshold(self, threshold):
+        if threshold <= 0 or threshold == '':
+            print("Invalid threshold value provided")
+
+        elif threshold > self.account_balance:
+            print("Threshold amount cannot exceded current account balance")
+
+        else:
+            self.threshold = threshold
+            print(f"Dear {self.account_holder} a threshold of ${self.threshold} was succesfully added for account {self.account_number}")
 
 class BankCustomer:
 

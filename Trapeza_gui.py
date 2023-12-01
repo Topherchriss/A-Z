@@ -17,6 +17,7 @@ class BankInterface:
         self.label_budget_category = tk.Label(master, text="Budget Category:")
         self.label_budget_limit = tk.Label(master, text="Budget Limit:")
         self.label_balance = tk.Label(master, text="Current Balance: $0.00")
+        self.label_set_threshold = tk.Label(master, text="Balance Threshold")
 
 
         #Entry fields
@@ -26,6 +27,7 @@ class BankInterface:
         self.entry_customer_id = tk.Entry(master)
         self.entry_budget_category = tk.Entry(master)
         self.entry_budget_limit = tk.Entry(master)
+        self.entry_set_threshold = tk.Entry(master)
 
 
         #Buttons
@@ -36,6 +38,7 @@ class BankInterface:
         self.button_set_budget = tk.Button(master, text="Set Budget", command=self.set_budget)
         self.button_spend_budget = tk.Button(master, text="Spend Budget", command=self.spend_budget)
         self.button_calculator = tk.Button(master, text="Calculator", command=self.open_calc)
+        self.button_set_threshold = tk.Button(master, text="Set Threshold", command=self.set_threshold)
 
 
         #Grid layout
@@ -52,12 +55,15 @@ class BankInterface:
         self.button_transactions.grid(row=6, column=0, columnspan=2, pady=10)
         self.button_balance.grid(row=7, column=0, columnspan=2, pady=10)
         self.label_balance.grid(row=8, column=0, columnspan=2, pady=10)
+        self.label_set_threshold.grid(row=9, column=0, padx=10, pady=10)
+        self.entry_set_threshold.grid(row=9, column=1, padx=10, pady=10)
         self.label_budget_category.grid(row=10, column=0, padx=10, pady=10)
         self.entry_budget_category.grid(row=10, column=1, padx=10, pady=10)
         self.label_budget_limit.grid(row=11, column=0, padx=10, pady=10)
         self.entry_budget_limit.grid(row=11, column=1, padx=10, pady=10)
         self.button_set_budget.grid(row=12, column=0, columnspan=2, pady=10)
         self.button_spend_budget.grid(row=12, column=1, columnspan=2, pady=10)
+        self.button_set_threshold.grid(row=13, column=0, columnspan=2, pady=10)
         self.button_calculator.grid(row=13, column=1, columnspan=2, pady=10)
 
 
@@ -79,8 +85,8 @@ class BankInterface:
         self.customer3.addAccount(self.customer3_account)
 
         # Select the first customer and account by default
-        self.selected_customer = self.customer1
-        self.selected_account = self.customer1_account
+        self.selected_customer = self.customer2
+        self.selected_account = self.customer2_account
         self.update_display()
 
         # Method to update the GUI display based on the selected customer and account
@@ -146,10 +152,13 @@ class BankInterface:
         customer_name = self.entry_customer_name.get()
         account_number = self.entry_account_number.get()
         customer_id = self.entry_customer_id.get()
-        amount = 0.0  # Initialize with a default value
-        threshold = 100
+        amount = 0.0
+        try:
+            threshold = float(self.entry_set_threshold.get())
+        except ValueError:
+            messagebox.showerror("Invalid", "Invalid Threshold amount")
 
-        #Validate Input
+
         try:
             amount = float(self.entry_amount.get())
         except ValueError:
@@ -293,6 +302,29 @@ class BankInterface:
                 messagebox.showinfo("Success", f"Dear {self.selected_account.account_holder}, you have spent ${amount} from {category} budget. You have ${self.selected_account.budget_categories[category]} before exceeding your limit of ${limit}")
 
                 self.entry_customer_id.delete(0, 'end')
+
+
+    def set_threshold(self):
+        customer_id = self.entry_customer_id.get()
+        threshold = 0.0
+        try:
+            threshold = float(self.entry_set_threshold.get())
+        except ValueError:
+            messagebox.showerror("Invalid", "Cannot proceed to set threshold. You entered an invalid threshold amount")
+
+
+        if customer_id != self.selected_account.customer_id or customer_id == '':
+            messagebox.showerror("Wrong PIN", "Cannot proceed to set threshold. You entered a wrong pin")
+
+        elif threshold < 0:
+            messagebox.showerror("Invalid", f"Cannot proceed to set threshold of {threshold}")
+
+        elif threshold > self.selected_account.account_balance:
+            messagebox.showerror("Invalid", f"Cannot proceed ro set threshold. Threshold must be less than current account balance!")
+
+        else:
+            self.selected_account.set_threshold(threshold)
+            messagebox.showinfo("succesful", f"Dear {self.selected_account.account_holder} a threshold of ${threshold} was set for account {self.selected_account.account_number}. Thank you for keeping it A-Z")
 
     def open_calc(self):
         #Creating a window for the calculator pop up
