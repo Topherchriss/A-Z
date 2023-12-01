@@ -4,7 +4,7 @@ Simple Banking System
 
 ## Overview
 
-A-Z TRAPEZA is a simple banking system application built with Python and the tkinter library for the graphical user interface. This application allows users to manage bank accounts, make deposits, withdrawals, check balances, and view transaction history.
+A-Z TRAPEZA is a simple banking system application built with Python and the tkinter library for the graphical user interface. This application allows users to manage bank accounts, make deposits, withdrawals, check balances, view transaction history and perform budget related actions.
 
 ## Features
 
@@ -15,7 +15,7 @@ A-Z TRAPEZA is a simple banking system application built with Python and the tki
 - **Check Balance:** View the current balance of the selected account.
 - **Transaction History:** Access a detailed transaction history for the selected account.
 - **Graphical User Interface:** User-friendly interface intergrated with a basic **calculator** for quick calculations and easy interaction.
--Additionally there is a **CLEAR** feature that enables you to clear ```account_data.json``` file
+-Additionally there is a **CLEAR** feature that enables the user to clear ```account_data.json``` file
 
 ## Getting Started
 
