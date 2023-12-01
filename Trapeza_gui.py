@@ -1,3 +1,4 @@
+import json
 import tkinter as tk
 from Extras import Calc
 from tkinter import messagebox
@@ -40,6 +41,7 @@ class BankInterface:
         self.button_spend_budget = tk.Button(master, text="Spend Budget", command=self.spend_budget)
         self.button_calculator = tk.Button(master, text="Calculator", command=self.open_calc)
         self.button_set_threshold = tk.Button(master, text="Set Threshold", command=self.set_threshold)
+        self.button_clear_json = tk.Button(master, text="Clear Data", command=self.clear_account_data)
 
 
         #Grid layout
@@ -66,10 +68,11 @@ class BankInterface:
         self.button_spend_budget.grid(row=12, column=1, columnspan=2, pady=10)
         self.button_set_threshold.grid(row=13, column=0, columnspan=2, pady=10)
         self.button_calculator.grid(row=13, column=1, columnspan=2, pady=10)
+        self.button_clear_json.grid(row=14, column=1, columnspan=3, pady=10)
 
 
         self.notification_text = tk.Text(master, height=2, width=40)
-        self.notification_text.grid(row=14, column=0, columnspan=2, pady=20)
+        self.notification_text.grid(row=15, column=0, columnspan=2, pady=20)
 
         #Create Three customers
         self.customer1 = BankCustomer(customer_name="Jean Maswa")
@@ -86,16 +89,15 @@ class BankInterface:
         self.customer3.addAccount(self.customer3_account)
 
         # Select the first customer and account by default
-        self.selected_customer = self.customer2
-        self.selected_account = self.customer2_account
+        self.selected_customer = self.customer1
+        self.selected_account = self.customer1_account
         self.update_display()
 
-        # Load the initial BankAccount data from the JSON file
-        try:
-            self.selected_account = load_bank_account_data("account_data.json")
-        except FileNotFoundError:
-            # If the file doesn't exist, create a default account
-            self.selected_account = BankAccount(account_number="1000102", account_holder="Chachu Mulumba", customer_id="2567", default_balance=1500)
+        account_data = load_bank_account_data("account_data.json")
+        if account_data is not None:
+            self.selected_account = account_data
+            self.update_display()
+
 
       # Method to save the BankAccount data to the JSON file
     def save_account_data(self):
@@ -286,13 +288,11 @@ class BankInterface:
         customer_id = self.entry_customer_id.get()
         amount = 0.0
 
-
         try:
             amount = float(self.entry_amount.get())
         except ValueError:
             messagebox.showerror("Invalid", "Invalid amount!")
             return
-
 
 
         if customer_id != self.selected_account.customer_id:
@@ -407,7 +407,29 @@ class BankInterface:
             calc_window.grid_columnconfigure(i, weight=1)
 
 
-    #save the account data when the application is closed
+    def clear_account_data(self):
+        try:
+            # Get the PIN entered by the user
+            entered_pin = int(self.entry_customer_id.get()) if self.entry_customer_id.get() else None
+        except ValueError:
+            messagebox.showerror("Invalid", "Cannot proceed to delete data. You entered an invalid PIN.")
+        return
+
+        # Check if the entered PIN matches the account's PIN
+        if entered_pin == self.selected_account.customer_id:
+
+            try:
+                # Open the file in write mode and write an empty JSON object
+                with open("account_data.json", "w") as file:
+                    json.dump({}, file)
+                self.display_notification("The contents of the file have been deleted.")
+            except Exception as e:
+                self.display_notification(f"An error occurred: {e}")
+
+        else:
+            messagebox.showerror("Wrong PIN", "Cannot proceed to delete data. You entered the wrong PIN.")
+
+    # save the account data when the application is closed
     def on_closing(self):
         # Save the account data before closing the application
         self.save_account_data()
