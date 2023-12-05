@@ -1,5 +1,4 @@
 class BankAccount:
-
     """
     A class representing a bank account.
 
@@ -36,12 +35,9 @@ class BankAccount:
 
         get_expense(category: str, amount: float) -> None:
             Record an expense for a specific spending category and update the balance.
-
     """
 
-
-    def __init__(self, account_number="", account_holder="", customer_id="", default_balance = 0):
-
+    def __init__(self, account_number="", account_holder="", customer_id="", default_balance=0, **kwargs):
         """
         Initialize a new BankAccount instance.
 
@@ -50,28 +46,75 @@ class BankAccount:
             account_holder (str): The name of the account holder.
             customer_id (str): The unique identifier of the customer.
             default_balance (float): The initial balance of the account.
+            **kwargs: Additional keyword arguments.
         """
 
         self.account_number = account_number
         self.account_holder = account_holder
         self.customer_id = customer_id
         self.account_balance = default_balance
-        self.transaction_history = []
-        self.budget_categories = {}
-        self.cumulative_expenses = {}
-        self.threshold = 0.0
+        self.transaction_history = kwargs.get("transaction_history", [])
+        self.budget_categories = kwargs.get("budget_categories", {})
+        self.cumulative_expenses = kwargs.get("cumulative_expenses", {})
+        self.threshold = kwargs.get("threshold", 0.0)
 
     def to_json(self):
+        # Convert transaction_history list to a dictionary
+        transaction_history_dict = [
+            {"Type of transaction": entry.get("Type of transaction", ""),
+             "Amount": entry.get("Amount deposited", 0.0)}
+            for entry in self.transaction_history
+        ]
+
         return {
             "account_number": self.account_number,
             "account_holder": self.account_holder,
             "customer_id": self.customer_id,
             "account_balance": self.account_balance,
-            "transaction_history": self.transaction_history,
+            "transaction_history": transaction_history_dict,
             "budget_categories": self.budget_categories,
             "cumulative_expenses": self.cumulative_expenses,
             "threshold": self.threshold
         }
+
+    @classmethod
+    def from_json(cls, data):
+        print("Data before creating instance:", data)
+
+        # Initialize instance with default values
+        instance = cls()
+
+         # Check if instance is successfully initialized
+        if instance:
+            print("succesfully initialized")
+
+        # Check if data is a dictionary
+            if isinstance(data, dict):
+                print("Data is a dictionary. Processing...")
+
+                # Retrieve the transaction history and convert it back to a list
+                transaction_history_list = [
+                    {"Type of transaction": entry.get("Type of transaction", ""),
+                    "Amount deposited": entry.get("Amount", 0.0)}
+                    for entry in data.get("transaction_history", [])
+                ]
+
+                    # Update instance with data
+                instance.account_number = data.get("account_number", "")
+                instance.account_holder = data.get("account_holder", "")
+                instance.customer_id = data.get("customer_id", "")
+                instance.default_balance = data.get("account_balance", 0)
+                instance.transaction_history = transaction_history_list
+                instance.budget_categories = data.get("budget_categories", {})
+                instance.cumulative_expenses = data.get("cumulative_expenses", {})
+                instance.threshold = data.get("threshold", 0)
+
+                print("Created instance:", instance)
+            else:
+                print("Invalid data format. Expected dictionary.")
+        return instance
+
+
 
     def set_budget(self, category, limit):
         self.budget_categories[category] = limit
@@ -245,8 +288,9 @@ import unittest
 
 if __name__ == '__main__':
     test_loader = unittest.TestLoader()
-    test_suite = test_loader.discover('tests',pattern='test_Alpha.py')
+    test_suite = test_loader.discover('tests', pattern='*.py')
     unittest.TextTestRunner().run(test_suite)
+
 
 
 import tkinter as tk

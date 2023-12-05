@@ -1,6 +1,7 @@
+import os
 import json
 import tkinter as tk
-from Extras import Calc
+from calculate import Calculator
 from tkinter import messagebox
 from Alpha import BankAccount
 from Alpha import BankCustomer
@@ -69,6 +70,7 @@ class BankInterface:
         """
 
         self.master = master
+
         self.master.title("A-Z TRAPEZA")
 
         #Labels for Customer info:
@@ -148,39 +150,88 @@ class BankInterface:
         self.customer2.addAccount(self.customer2_account)
         self.customer3.addAccount(self.customer3_account)
 
-        # Select the first customer and account by default
-        self.selected_customer = self.customer1
-        self.selected_account = self.customer1_account
+
+        self.selected_customer = None
+        self.selected_account = None
+        self.account_data = {}
+
+         # Load account data from JSON file
+        try:
+            account_data = load_bank_account_data("account_data.json")
+        except InvalidJSONFormatError as e:
+            print("Error loading account data:", e)
+
+        self.selected_account = self.customer2_account
+        self.selected_customer = self.customer2
+
+        self.account_data = load_bank_account_data(self.selected_account)
+        # Update the display after setting the selected customer and account
         self.update_display()
 
-        account_data = load_bank_account_data("account_data.json")
-        if account_data is not None:
-            self.selected_account = account_data
-            self.update_display()
 
-
-      # Method to save the BankAccount data to the JSON file
+    # Method to save the BankAccount data to the JSON file
     def save_account_data(self):
-        save_bank_account_data(self.selected_account, "account_data.json")
+        try:
+            save_bank_account_data(self.selected_account, "account_data.json")
+        except Exception as e:
+            print(f"An error occurred while saving account data: {e}")
 
-        # Method to update the GUI display based on the selected customer and account
+    def load_account_data(self, account_data):
+        # Check if the JSON file exists
+        if not os.path.exists('account_data.json'):
+            print("Account data file not found.")
+            return None
+        try:
+            #account_data = load_bank_account_data("account_data.json")
+            if account_data:
+                self.selected_account = account_data
+                print("Account data loaded successfully")
+            else:
+                print("No account data found")
+        except Exception as e:
+            print(f"An error occurred while loading account data: {e}")
+
+
     def update_display(self):
-        stored_balance = self.selected_account.account_balance if hasattr(self.selected_account, 'account_balance') else 0.0 # Initialize stored_balance to previous account balance or 0.0 if there is none
 
-        # Add the total of previous transactions to the stored balance
-        previous_transactions = sum(self.selected_account.transaction_history)
-        total_balance = stored_balance + previous_transactions
+        # Load account data from JSON file
+        try:
+            account_data = load_bank_account_data("account_data.json")
+        except Exception as e:
+            print(f"An error occurred while loading account data: {e}")
+            return
 
-        self.label_customer_name.config(text=f"Customer's Name: {self.selected_customer.customer_name}")
-        self.label_account_number.config(text=f"Customer's account number: {self.selected_account.account_number}")
-        self.label_balance.config(text=f"Current Balance: ${total_balance:.2f}")
+        if account_data:
+            # Update selected account and customer if account data is valid
+            self.selected_account = self.customer2_account
+            self.selected_customer = self.customer2
+
+            # Calculate total balance
+            stored_balance = self.selected_account.account_balance
+            previous_transactions = sum(
+                entry["Amount deposited"]
+                if entry["Type of transaction"] == "Deposit"
+                else -entry["Amount withdrawn"]
+                for entry in self.selected_account.transaction_history
+            )
+            total_balance = stored_balance + previous_transactions
+
+            # Update display elements with valid data
+            self.label_customer_name.config(text=f"Customer's Name: {self.selected_account.account_holder}")
+            self.label_account_number.config(text=f"Customer's account number: {self.selected_account.account_number}")
+            self.label_balance.config(text=f"Current Balance: ${total_balance:.2f}")
+
+        else:
+            # Display error message if account data is not found
+            print("No account data found")
 
 
     # Method to switch customer and update the display
     def switch_customer(self, customer):
-        self.selected_customer = customer
+        self.selected_customer = customer1
         # For simplicity, every customer has only one account as of now
-        self.selected_account = customer.accounts[0]
+        self.selected_account = customer1.accounts[0]
+        self.load_account_data(account_data)
         self.update_display()
 
     # Method to display notifications
@@ -196,11 +247,11 @@ class BankInterface:
         customer_name = self.entry_customer_name.get()
         account_number = self.entry_account_number.get()
         customer_id = self.entry_customer_id.get()
-        amount = 0.0  # Initialize with a default value
+        amount = float(0.0)  # Initialize with a default value
 
         #Validate input
         try:
-            amount = float(self.entry_amount.get())
+            get_amount = float(self.entry_amount.get())
         except ValueError:
             messagebox.showerror("Invalid amount", f"Amount must be a numeric figure more than 10 dollars")
 
@@ -211,21 +262,22 @@ class BankInterface:
             messagebox.showerror("Wrong Pin", "Cannot proceed to deposit. You entered a wrong Pin!")
 
 
-        elif amount < 10:
-            messagebox.showerror("Unsuccessful", f"Deposit of ${amount} is below the minimum (USD 10)")
+        elif get_amount < 10:
+            messagebox.showerror("Unsuccessful", f"Deposit of ${get_amount} is below the minimum (USD 10)")
 
             self.entry_customer_id.delete(0, 'end')
 
         else:
-            self.selected_account.deposit(amount)
+            self.selected_account.deposit(get_amount)
 
             self.label_balance.config(text=f"Current Balance: ${self.selected_account.account_balance:.2f}") #Update the GUI after every transaction
 
-            if amount >= 50000:
-                self.display_notification(f"A large deposit of ${amount} was made to your account.") #Notify the user of large deposit amounts
+            if get_amount >= 50000:
+                self.display_notification(f"A large deposit of ${get_amount} was made to your account.") #Notify the user of large deposit amounts
 
-            messagebox.showinfo("Success", f"Deposit of ${amount} was succesful. New account balance: ${self.selected_account.account_balance}")
+            messagebox.showinfo("Success", f"Deposit of ${get_amount} was succesful. New account balance: ${self.selected_account.account_balance}")
             self.save_account_data()
+            print("Deposit data saved")
             self.entry_customer_id.delete(0, 'end')
 
     # Method to withdraw
@@ -233,8 +285,9 @@ class BankInterface:
         customer_name = self.entry_customer_name.get()
         account_number = self.entry_account_number.get()
         customer_id = self.entry_customer_id.get()
-        amount = 0.0
         try:
+            amount = float(0.0)
+            amount = float(self.entry_amount.get())
             threshold = float(self.entry_set_threshold.get()) if self.entry_set_threshold.get() else 0.0
         except ValueError:
             messagebox.showerror("Invalid", "Invalid Threshold amount")
@@ -314,12 +367,13 @@ class BankInterface:
 
         else:
             transaction_history = self.selected_account.get_transaction_history()
-            if not transaction_history: #check the case where there are no transactions
-                messagebox.showinfo("Transactions", "No transactions available so far.")
-            else:
+            if transaction_history: #check the case where there are transactions
                 formatted_transactions = "\n".join(str(transaction) for transaction in transaction_history)
                 messagebox.showinfo("Transactions", f"{customer_name}'s transaction history:\n{formatted_transactions}")
-
+                self.save_account_data()
+                print("Transaction saved")
+            else: #check the case where there are no transactions
+                messagebox.showinfo("Transactions", "No transactions available so far.")
                 self.entry_customer_id.delete(0, 'end')
 
     def set_budget(self):
@@ -341,6 +395,7 @@ class BankInterface:
             self.selected_account.set_budget(category, limit)
             messagebox.showinfo("Success", f"Dear {self.selected_account.account_holder} a budget category of {category} with a limit of ${limit} was added on your acccount. Thank you for keeping it A-Z!")
             self.save_account_data()
+            print("Budget Set")
             self.entry_customer_id.delete(0, 'end')
 
     def spend_budget(self):
@@ -383,8 +438,12 @@ class BankInterface:
 
             else:
                 self.selected_account.get_expense(category, amount)
-                messagebox.showinfo("Success", f"Dear {self.selected_account.account_holder}, you have spent ${amount} from {category} budget. You budgt limit is ${limit}")
+                messagebox.showinfo("Success", f"Dear {self.selected_account.account_holder}, you have spent ${amount} from {category} budget. Your budget limit for {category} is at ${limit}")
+
+                self.label_balance.config(text=f"Current Balance: ${self.selected_account.account_balance:.2f}") #Update the GUI after every transaction
+
                 self.save_account_data()
+                print("Budget expinditure")
                 self.entry_customer_id.delete(0, 'end')
 
 
@@ -446,16 +505,16 @@ class BankInterface:
 
         # Equal button action
         def calculate():
+
+            expression = entry_calc.get()
             try:
-                result = eval(entry_calc.get())
+                result = evaluate_expression(expression, calculator)
                 entry_calc.delete(0, tk.END)
                 entry_calc.insert(tk.END, str(result))
-                #entry_calc.delete(0, tk.END)
             except Exception as e:
                 entry_calc.delete(0, tk.END)
                 entry_calc.insert(tk.END, "Error")
                 entry_calc.delete(0, tk.END)
-
 
         # Create equal button separately
         equal_button = tk.Button(calc_window, text='=', command=calculate)
@@ -465,32 +524,94 @@ class BankInterface:
         for i in range(5):
             calc_window.grid_rowconfigure(i, weight=1)
             calc_window.grid_columnconfigure(i, weight=1)
+    #method to perform evaluation logic
+    def evaluate_expression(expression, calculator):
+
+        # Split the expression into tokens (numbers and operators)
+        tokens = expression.split()
+
+        # Initialize the operand stack
+        operand_stack = []
+
+        for token in tokens:
+            if token.isdigit():
+                # Push the operand onto the stack
+                operand_stack.append(int(token))
+
+            else:
+                # Perform the corresponding operation
+                if token == '+':
+                    operand2 = operand_stack.pop()
+                    operand1 = operand_stack.pop()
+                    result = calculator.addition(operand1, operand2)
+                    operand_stack.append(result)
+
+                elif token == '-':
+                    operand2 = operand_stack.pop()
+                    operand1 = operand_stack.pop()
+                    result = calculator.subtraction(operand1, operand2)
+                    operand_stack.append(result)
+
+                elif token == '*':
+                    operand2 = operand_stack.pop()
+                    operand1 = operand_stack.pop()
+                    result = calculator.multiplication(operand1, operand2)
+                    operand_stack.append(result)
+
+                elif token == '/':
+                    operand2 = operand_stack.pop()
+                    operand1 = operand_stack.pop()
+                    result = calculator.division(operand1, operand2)
+                    operand_stack.append(result)
+
+                else:
+                    raise ValueError(f"Unsupported operator: {token}")
+
+        # Check if there's only one operand left
+        if len(operand_stack) != 1:
+            raise ValueError("Invalid expression")
+
+        # Return the final result
+        return operand_stack[0]
 
 
     def clear_account_data(self):
-        try:
+
             # Get the PIN entered by the user
-            entered_pin = int(self.entry_customer_id.get()) if self.entry_customer_id.get() else None
-        except ValueError:
+        entered_pin = self.entry_customer_id.get() if self.entry_customer_id.get() else None
+
+        if entered_pin ==  '':
             messagebox.showerror("Invalid", "Cannot proceed to delete data. You entered an invalid PIN.")
-        return
 
         # Check if the entered PIN matches the account's PIN
-        if entered_pin == self.selected_account.customer_id:
-
-            try:
-                # Open the file in write mode and write an empty JSON object
-                with open("account_data.json", "w") as file:
-                    json.dump({}, file)
-                self.display_notification("The contents of the file have been deleted.")
-            except Exception as e:
-                self.display_notification(f"An error occurred: {e}")
+        elif entered_pin != self.selected_account.customer_id:
+            messagebox.showerror("Wrong PIN", "Cannot proceed to delete data. You entered the wrong PIN.")
 
         else:
-            messagebox.showerror("Wrong PIN", "Cannot proceed to delete data. You entered the wrong PIN.")
+            if entered_pin == self.selected_account.customer_id:
+                # Prompt user for confirmation
+                confirmation = messagebox.askokcancel("Clear Account Data", "Are you sure you want to clear all account data? This action is permanent and cannot be undone.")
+
+                if not confirmation:
+                    return
+                else:
+                    try:
+                        # Open the file in write mode and write an empty JSON object
+                        with open("account_data.json", "w") as file:
+                            json.dump({}, file)
+                        self.display_notification("The contents of the file have been deleted.")
+                    except Exception as e:
+                        self.display_notification(f"An error occurred: {e}")
+            else:
+                messagebox.showerror("Error", "Unexpected error occurred.Please try again later")
+
+
 
     # save the account data when the application is closed
     def on_closing(self):
         # Save the account data before closing the application
+        print("Closing application...")
         self.save_account_data()
+        print("saved data:", self.save_account_data)
+        print("Account data saved. Destroying the window.")
         self.master.destroy()
