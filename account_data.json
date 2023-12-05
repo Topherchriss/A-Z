@@ -1,8 +1,8 @@
 {
-  "account_number": "1000102",
-  "account_holder": "Chachu Mulumba",
-  "customer_id": "2567",
-  "account_balance": 1500,
+  "account_number": "1000101",
+  "account_holder": "Jean Maswa",
+  "customer_id": "1456",
+  "account_balance": 10000,
   "transaction_history": [],
   "budget_categories": {},
   "cumulative_expenses": {},

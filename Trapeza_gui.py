@@ -1,7 +1,6 @@
 import os
 import json
 import tkinter as tk
-from calculate import Calculator
 from tkinter import messagebox
 from Alpha import BankAccount
 from Alpha import BankCustomer
@@ -160,22 +159,33 @@ class BankInterface:
             account_data = load_bank_account_data("account_data.json")
         except InvalidJSONFormatError as e:
             print("Error loading account data:", e)
+        print("Account data found proceeding to select account")
 
-        self.selected_account = self.customer2_account
-        self.selected_customer = self.customer2
+        self.selected_account = self.customer1_account
+        self.selected_customer = self.customer1
+        print(f"customer selected:{self.selected_customer} account selected: {self.selected_account}")
 
         self.account_data = load_bank_account_data(self.selected_account)
+
         # Update the display after setting the selected customer and account
         self.update_display()
 
+    def select_cusomer(self, customer):
+        try:
+            account = load_bank_account_data('account_data.json')
+        except FileNotFoundError:
+            print("No existing account data")
+
 
     # Method to save the BankAccount data to the JSON file
-    def save_account_data(self):
+    def save_account_data(self, selected_account, file_path="account_data.json"):
         try:
             save_bank_account_data(self.selected_account, "account_data.json")
         except Exception as e:
             print(f"An error occurred while saving account data: {e}")
 
+
+    #Methd to load account data
     def load_account_data(self, account_data):
         # Check if the JSON file exists
         if not os.path.exists('account_data.json'):
@@ -191,6 +201,17 @@ class BankInterface:
         except Exception as e:
             print(f"An error occurred while loading account data: {e}")
 
+    #Method to check is data exists and update if doesn't
+    def check_and_save_data(self):
+        # Load the saved account data from the JSON file
+        saved_account_data = load_bank_account_data("account_data.json")
+
+        # Compare the saved account data with the current selected account
+        if saved_account_data != self.selected_account:
+            # Save the updated selected account data to the JSON file
+            save_bank_account_data(self.selected_account, "account_data.json")
+            print("Account data updated and saved successfully")
+
 
     def update_display(self):
 
@@ -203,8 +224,8 @@ class BankInterface:
 
         if account_data:
             # Update selected account and customer if account data is valid
-            self.selected_account = self.customer2_account
-            self.selected_customer = self.customer2
+            self.selected_account = self.customer1_account
+            self.selected_customer = self.customer1
 
             # Calculate total balance
             stored_balance = self.selected_account.account_balance
@@ -276,8 +297,12 @@ class BankInterface:
                 self.display_notification(f"A large deposit of ${get_amount} was made to your account.") #Notify the user of large deposit amounts
 
             messagebox.showinfo("Success", f"Deposit of ${get_amount} was succesful. New account balance: ${self.selected_account.account_balance}")
-            self.save_account_data()
+
+            self.check_and_save_data()
+            self.save_account_data(self.selected_account, "account_data.json")
+
             print("Deposit data saved")
+
             self.entry_customer_id.delete(0, 'end')
 
     # Method to withdraw
@@ -326,7 +351,7 @@ class BankInterface:
 
             messagebox.showinfo("Success", f"Withdrawal of ${amount} was a success. Your new account balance is: ${self.selected_account.account_balance}")
 
-            self.save_account_data()
+            self.save_account_data(self.selected_account, "account_data.json")
             self.entry_customer_id.delete(0, 'end')
 
 
@@ -394,7 +419,7 @@ class BankInterface:
         else:
             self.selected_account.set_budget(category, limit)
             messagebox.showinfo("Success", f"Dear {self.selected_account.account_holder} a budget category of {category} with a limit of ${limit} was added on your acccount. Thank you for keeping it A-Z!")
-            self.save_account_data()
+            self.save_account_data(self.selected_account, "account_data.json")
             print("Budget Set")
             self.entry_customer_id.delete(0, 'end')
 
@@ -442,7 +467,7 @@ class BankInterface:
 
                 self.label_balance.config(text=f"Current Balance: ${self.selected_account.account_balance:.2f}") #Update the GUI after every transaction
 
-                self.save_account_data()
+                self.save_account_data(self.selected_account, "account_data.json")
                 print("Budget expinditure")
                 self.entry_customer_id.delete(0, 'end')
 
@@ -469,7 +494,7 @@ class BankInterface:
         else:
             self.selected_account.set_threshold(threshold)
             messagebox.showinfo("succesful", f"Dear {self.selected_account.account_holder} a threshold of ${threshold} was set for account {self.selected_account.account_number}. Thank you for keeping it A-Z")
-            self.save_account_data()
+            self.save_account_data(self.selected_account, "account_data.json")
 
     def open_calc(self):
         #Creating a window for the calculator pop up
@@ -505,10 +530,9 @@ class BankInterface:
 
         # Equal button action
         def calculate():
-
             expression = entry_calc.get()
             try:
-                result = evaluate_expression(expression, calculator)
+                result = eval(expression)
                 entry_calc.delete(0, tk.END)
                 entry_calc.insert(tk.END, str(result))
             except Exception as e:
@@ -524,6 +548,9 @@ class BankInterface:
         for i in range(5):
             calc_window.grid_rowconfigure(i, weight=1)
             calc_window.grid_columnconfigure(i, weight=1)
+
+        """Used the eval() function for simplicty but can a well as implement the Calculator class from Extras and express it using the logic below"""
+    """
     #method to perform evaluation logic
     def evaluate_expression(expression, calculator):
 
@@ -573,7 +600,7 @@ class BankInterface:
 
         # Return the final result
         return operand_stack[0]
-
+        """
 
     def clear_account_data(self):
 
@@ -611,7 +638,10 @@ class BankInterface:
     def on_closing(self):
         # Save the account data before closing the application
         print("Closing application...")
-        self.save_account_data()
+
+        self.save_account_data(self.selected_account, "account_data.json")
+
         print("saved data:", self.save_account_data)
         print("Account data saved. Destroying the window.")
+
         self.master.destroy()

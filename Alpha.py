@@ -121,6 +121,11 @@ class BankAccount:
 
     def budget_spending(self, category, amount):
 
+        try:
+            amount = float(amount)
+        except ValueError as e:
+            print(f"Error amount value has to be a float {e}")
+
         if category not in self.budget_categories:
             print(f"Dear {self.account_holder} category: {category} not set!")
             return
@@ -143,6 +148,12 @@ class BankAccount:
 
 
     def deposit(self, amount):
+
+        try:
+            amount = float(amount)
+        except ValueError as e:
+            print(f"Error invalid amount {e}")
+
         if amount > 10:
             self.account_balance += amount
 
@@ -155,6 +166,11 @@ class BankAccount:
 
 
     def withdraw(self, amount):
+
+        try:
+            amount = float(amount)
+        except ValueError as e:
+            print(f"Error invalid amount {e}")
 
         if amount >= 10 and amount <= self.account_balance:
             self.account_balance -= amount
@@ -195,6 +211,11 @@ class BankAccount:
 
     def get_expense(self, category, amount):
 
+        try:
+            amount = float(amount)
+        except ValueError as e:
+            print(f"Error invalid amount {e}")
+
         if category not in self.budget_categories:
             print(f"Category '{category}' not found in budget.")
             return
@@ -226,6 +247,11 @@ class BankAccount:
 
 
     def set_threshold(self, threshold):
+        try:
+            threshold = float(threshold)
+        except ValueError as e:
+            print(f"Error invalid amount {e}")
+
         if threshold <= 0 or threshold == '':
             print("Invalid threshold value provided")
 

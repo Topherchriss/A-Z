@@ -60,8 +60,12 @@ def load_bank_account_data(filename):
             data['account_balance'] = float(data['account_balance'])
 
             for transaction in data['transaction_history']:
+                if isinstance(transaction['Amount'], float):
+                    continue  # Skip conversion if already a float
+
+            for transaction in data['transaction_history']:
                 try:
-                    transaction['amount'] = float(transaction['amount'])
+                    transaction['Amount'] = float(transaction['Amount'])
                 except ValueError as ve:
                     print(f"Error converting 'amount' to float: {ve}")
                     return None

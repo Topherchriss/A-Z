@@ -40,12 +40,12 @@ class TestTrapeza(unittest.TestCase):
         self.account = BankAccount(account_number="1000101", account_holder="Jean Maswa", customer_id="1456", default_balance=10000)
 
     def test_default_balance(self):
-        self.assertEqual(self.account.account_balance, 10000, "Default balance should be $1000")
+        self.assertEqual(self.account.account_balance, 10000, "Default balance should be $1000.0")
 
 
     def test_deposit(self):
         self.account.deposit(5000)
-        self.assertEqual(self.account.account_balance, 15000, "Deposit of $5000 should result in a balance of $6000")
+        self.assertEqual(self.account.account_balance, 15000, "Deposit of $5000 should result in a balance of $6000.0")
 
 
     def test_invalid_deposit(self):
@@ -55,7 +55,7 @@ class TestTrapeza(unittest.TestCase):
 
     def test_withdrawal(self):
         self.account.withdraw(5000)
-        self.assertEqual(self.account.account_balance, 5000, "Withdrawal of $5000 should result in a balance of $500")
+        self.assertEqual(self.account.account_balance, 5000, "Withdrawal of $5000 should result in a balance of $500.0")
 
 
     def test_less_funds(self):
@@ -140,7 +140,7 @@ class TestSendNotification(unittest.TestCase):
         self.account.send_notification()
 
         # Assert
-        expected_message = "Dear customer your deposit of 2000 was succesful. Your new balance is: 12000"
+        expected_message = "Dear customer your deposit of 2000.0 was succesful. Your new balance is: 12000.0"
 
         mock_print.assert_called_with(expected_message)
 
@@ -154,7 +154,7 @@ class TestSendNotification(unittest.TestCase):
         self.account.send_notification()
 
         #Assert
-        expected_message = f"Notification: Your account balance is below $9000."
+        expected_message = f"Notification: Your account balance is below $9000.0."
 
         mock_print.assert_called_with(expected_message)
 
@@ -230,7 +230,7 @@ class TestBudgetCategory(unittest.TestCase):
 
         #Assert
         self.account.send_notification()
-        expected_message = f"Expense of 5000 from Enta was successful. Your new balance is 5000"
+        expected_message = f"Expense of 5000.0 from Enta was successful. Your new balance is 5000.0"
 
         mock_print.assert_called_with(expected_message)
 
@@ -242,7 +242,7 @@ class TestBudgetCategory(unittest.TestCase):
 
         self.account.budget_spending(category="sports", amount=1000)
 
-        expected_message = f"Expense of 1000 from sports was successful. Your new balance is 9000"
+        expected_message = f"Expense of 1000.0 from sports was successful. Your new balance is 9000.0"
 
         mock_print.assert_called_with(expected_message)
 
@@ -253,7 +253,7 @@ class TestBudgetCategory(unittest.TestCase):
 
         self.account.budget_spending(category="vip", amount=-3000)
 
-        expected_message = "Invalid expense amount -3000. Please insert a positive value"
+        expected_message = "Invalid expense amount -3000.0. Please insert a positive value"
 
         mock_print.assert_called_with(expected_message)
 
@@ -278,7 +278,7 @@ class TestBudgetCategory(unittest.TestCase):
         self.account.get_expense(category="BILLS", amount=500)
 
         self.account.send_notification()
-        expected_message = "You have succesfully spent 500 form category BILLS remainig $500"
+        expected_message = "You have succesfully spent 500.0 form category BILLS remainig $500.0"
 
         mock_print.assert_called_with(expected_message)
 
@@ -302,7 +302,7 @@ class TestBudgetCategory(unittest.TestCase):
 
         self.account.get_expense(category='A', amount=300)
 
-        expected_message = "You have succesfully spent 300 form category A remainig $200"
+        expected_message = "You have succesfully spent 300.0 form category A remainig $200.0"
 
         mock_print.assert_called_with(expected_message)
 
@@ -311,7 +311,7 @@ class TestBudgetCategory(unittest.TestCase):
 
         self.account.set_threshold(288)
 
-        expected_message = "Dear Jean Maswa a threshold of $288 was succesfully added for account 1000101"
+        expected_message = "Dear Jean Maswa a threshold of $288.0 was succesfully added for account 1000101"
 
         mock_print.assert_called_with(expected_message)
 
