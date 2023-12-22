@@ -1,12 +1,12 @@
 import json
-from Alpha import BankAccount
+from Alpha import BankAccount, BankCustomer
 
 
-cached_data = None  # Global variable to store cached data and avoid data being loaded multiple times
+cached_data = None  # Global variable to store cached data. Avoid data being loaded multiple times.
 
 def save_bank_account_data(bank_account, filename):
 
-    """"
+    """
     This function saves the data of a BankAccount object to a JSON file.
 
     Parameters:
@@ -20,6 +20,7 @@ def save_bank_account_data(bank_account, filename):
 
     Exception: An error occurred while saving the account data.
     """
+
     try:
         data = bank_account.to_json()
         with open(filename, 'w') as file:
@@ -90,5 +91,58 @@ def load_bank_account_data(filename):
     except Exception as e:
         print(f"An error occurred while loading account data: {e}")
         return None
+
+"""
+def save_to_json(filename, data):
+    Save data to a JSON file
+    with open(filename, 'w') as file:
+        json.dump(data, file, indent=2)
+
+def load_from_json(filename):
+    Load data from a JSON file.
+    try:
+        with open(filename, 'r') as file:
+            data = json.load(file)
+        return data
+    except FileNotFoundError:
+        print(f"File {filename} not found.")
+        return None
+    except json.JSONDecodeError:
+        print(f"Invalid JSON format in file {filename}.")
+        return None
+    except Exception as e:
+        print(f"An error occurred while loading data from {filename}: {e}")
+        return None
+
+def save_bank_account_data(bank_account, filename):
+    Save BankAccount data to a JSON file.
+    data = bank_account.to_json()
+    save_to_json(filename, data)
+
+def load_bank_account_data(filename):
+    Load BankAccount data from a JSON file.
+    data = load_from_json(filename)
+
+    if data:
+        # Convert data to a BankAccount instance using from_json method
+        return BankAccount.from_json(data)
+    else:
+        return None
+
+def save_bank_customer_data(bank_customer, filename):
+    Save BankCustomer data to a JSON file.
+    data = bank_customer.to_json()
+    save_to_json(filename, data)
+
+def load_bank_customer_data(filename):
+    Load BankCustomer data from a JSON file.
+    data = load_from_json(filename)
+
+    if data:
+        # Convert data to a BankCustomer instance using from_json method
+        return BankCustomer.from_json(data)
+    else:
+        return None
+"""
 
 

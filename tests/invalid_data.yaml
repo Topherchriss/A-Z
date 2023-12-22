@@ -1,0 +1,7 @@
+- customer_name: John
+  account_number: 123
+  default_balance: 100
+- invalid data: "@y"
+- customer_name: Omolo
+  account_number: 789
+  default_balance: 500

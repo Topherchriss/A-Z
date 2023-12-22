@@ -1,5 +1,5 @@
 import unittest
-from Alpha import BankAccount
+from Alpha import BankAccount, BankCustomer
 
 
 class TestTrapeza(unittest.TestCase):
@@ -332,4 +332,49 @@ class TestBudgetCategory(unittest.TestCase):
         expected_message = "Threshold amount cannot exceded current account balance"
 
         mock_print.assert_called_with(expected_message)
+
+
+class TestBankCustomer(unittest.TestCase):
+
+    def setUp(self):
+        # Set up a BankCustomer instance for testing
+        self.customer = BankCustomer(customer_name="John Doe", account_number="1000101", account_holder="John Doe", customer_id="1456", default_balance=10000)
+
+    def test_add_account(self):
+        # Arrange
+        account = BankAccount(account_number="2000202", account_holder="John Doe", customer_id="1456", default_balance=5000)
+
+        # Act
+        self.customer.addAccount(account)
+
+        # Assert
+        self.assertIn(account, self.customer.get_all_accounts(), "Account should be added to the customer's profile")
+
+    def test_total_balance(self):
+        # Arrange
+        account1 = BankAccount(account_number="2000202", account_holder="John Doe", customer_id="1456", default_balance=5000)
+        account2 = BankAccount(account_number="3000303", account_holder="John Doe", customer_id="1456", default_balance=7000)
+        self.customer.addAccount(account1)
+        self.customer.addAccount(account2)
+
+        # Act
+        total = self.customer.total_balance()
+
+        # Assert
+        expected_total = account1.account_balance + account2.account_balance
+        self.assertEqual(total, expected_total, "Total balance should match the sum of individual account balances")
+
+    def test_has_matching_information(self):
+        # Arrange
+        account_data = {"customer_id": "1456", "customer_name": "John Doe"}
+
+        # Act & Assert
+        self.assertTrue(self.customer.has_matching_information(account_data), "Customer information should match")
+
+    def test_does_not_have_matching_information(self):
+        # Arrange
+        account_data = {"customer_id": "9999", "customer_name": "Unknown"}
+
+        # Act & Assert
+        self.assertFalse(self.customer.has_matching_information(account_data), "Customer information should not match")
 

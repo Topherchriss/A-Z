@@ -1,3 +1,5 @@
+import yaml
+
 class BankAccount:
     """
     A class representing a bank account.
@@ -37,7 +39,7 @@ class BankAccount:
             Record an expense for a specific spending category and update the balance.
     """
 
-    def __init__(self, account_number="", account_holder="", customer_id="", default_balance=0, **kwargs):
+    def __init__(self, account_number="", account_holder="", customer_id="", default_balance=0):
         """
         Initialize a new BankAccount instance.
 
@@ -53,66 +55,45 @@ class BankAccount:
         self.account_holder = account_holder
         self.customer_id = customer_id
         self.account_balance = default_balance
-        self.transaction_history = kwargs.get("transaction_history", [])
-        self.budget_categories = kwargs.get("budget_categories", {})
-        self.cumulative_expenses = kwargs.get("cumulative_expenses", {})
-        self.threshold = kwargs.get("threshold", 0.0)
+        self.transaction_history = []
+        self.budget_categories = {}
+        self.cumulative_expenses = {}
+        self.threshold = 0.0
 
-    def to_json(self):
-        # Convert transaction_history list to a dictionary
-        transaction_history_dict = [
-            {"Type of transaction": entry.get("Type of transaction", ""),
-             "Amount": entry.get("Amount deposited", 0.0)}
-            for entry in self.transaction_history
-        ]
-
-        return {
+    def to_yaml(self):
+        data = {
             "account_number": self.account_number,
             "account_holder": self.account_holder,
             "customer_id": self.customer_id,
             "account_balance": self.account_balance,
-            "transaction_history": transaction_history_dict,
+            "transaction_history": self.transaction_history,
             "budget_categories": self.budget_categories,
             "cumulative_expenses": self.cumulative_expenses,
             "threshold": self.threshold
         }
+        return yaml.dump(data, default_flow_style=False)
 
     @classmethod
-    def from_json(cls, data):
-        print("Data before creating instance:", data)
+    def from_yaml(cls, yaml_str):
+        data = yaml.safe_load(yaml_str)
+        return cls(
+            account_number=data["account_number"],
+            account_holder=data["account_holder"],
+            customer_id=data["customer_id"],
+            default_balance=data["account_balance"],
+            transaction_history=data["transaction_history"],
+            budget_categories=data["budget_categories"],
+            cumulative_expenses=data["cumulative_expenses"],
+            threshold=data["threshold"]
+        )
 
-        # Initialize instance with default values
-        instance = cls()
-
-         # Check if instance is successfully initialized
-        if instance:
-            print("succesfully initialized")
-
-        # Check if data is a dictionary
-            if isinstance(data, dict):
-                print("Data is a dictionary. Processing...")
-
-                # Retrieve the transaction history and convert it back to a list
-                transaction_history_list = [
-                    {"Type of transaction": entry.get("Type of transaction", ""),
-                    "Amount deposited": entry.get("Amount", 0.0)}
-                    for entry in data.get("transaction_history", [])
-                ]
-
-                    # Update instance with data
-                instance.account_number = data.get("account_number", "")
-                instance.account_holder = data.get("account_holder", "")
-                instance.customer_id = data.get("customer_id", "")
-                instance.default_balance = data.get("account_balance", 0)
-                instance.transaction_history = transaction_history_list
-                instance.budget_categories = data.get("budget_categories", {})
-                instance.cumulative_expenses = data.get("cumulative_expenses", {})
-                instance.threshold = data.get("threshold", 0)
-
-                print("Created instance:", instance)
-            else:
-                print("Invalid data format. Expected dictionary.")
-        return instance
+    """
+    @classmethod
+    def from_yaml(cls, loader, node):
+        data = loader.construct_mapping(node, deep=True)
+        # Create a BankAccount instance using the extracted data
+        return cls(**data)
+    """
 
 
 
@@ -245,6 +226,9 @@ class BankAccount:
 
             return limit_after_spending
 
+    def get_budget_categories(self):
+        return self.budget_categories
+
 
     def set_threshold(self, threshold):
         try:
@@ -262,7 +246,9 @@ class BankAccount:
             self.threshold = threshold
             print(f"Dear {self.account_holder} a threshold of ${self.threshold} was succesfully added for account {self.account_number}")
 
-class BankCustomer:
+
+
+class BankCustomer(BankAccount):
 
     """
     A class representing a bank customer.
@@ -277,10 +263,55 @@ class BankCustomer:
 
     """
 
-    def __init__(self, customer_name):
-
+    def __init__(self, customer_name, account_number, account_holder, customer_id, default_balance):
+        super().__init__(account_number, account_holder, customer_id)
         self.customer_name = customer_name
+        self.default_balance = default_balance
         self.accounts = []
+
+
+    def to_yaml(self):
+        accounts_yaml = [yaml.dump(account, default_flow_style=False) for account in self.accounts]
+        return yaml.dump({
+            'customer_name': self.customer_name,
+            'accounts': accounts_yaml,
+            'account_number': self.account_number,
+            'account_holder': self.account_holder,
+            'customer_id': self.customer_id,
+            'default_balance': self.default_balance,
+        }, default_flow_style=False)
+
+
+    @classmethod
+    def from_yaml(cls, yaml_str):
+        data = yaml.safe_load(yaml_str)
+        accounts_data = data.get('accounts', [])
+        accounts = []
+
+        for account_data in accounts_data:
+            accounts.append(BankAccount.from_yaml(account_data))
+
+        customer = cls(data['customer_name'], data['account_number'], data['account_holder'], data['customer_id'], data['default_balance'])
+        customer.accounts = accounts
+
+        return data
+
+    def _update_yaml_string(self):
+        """
+        Update the internal YAML string representation of the customer object.
+        """
+        account_yaml_strings = []
+        for account in self.accounts:
+            account_yaml_strings.append(yaml.dump(account, default_flow_style=False))
+
+        self._yaml_string = yaml.dump({
+            'customer_name': self.customer_name,
+            'accounts': account_yaml_strings,
+            'account_number': self.account_number,
+            'account_holder': self.account_holder,
+            'customer_id': self.customer_id,
+            'default_balance': self.default_balance,
+        }, default_flow_style=False)
 
     def addAccount(self, account):
 
@@ -293,13 +324,49 @@ class BankCustomer:
         """
         self.accounts.append(account)
 
-        print(f"Account {account.account_number} added for {self.customer_name}. Thank you for choosing our bank.")
+        # Update the customer object's YAML string representation
+        self._update_yaml_string()
+
+        print(f"Account added for {self.customer_name}. Thank you for choosing our bank.")
+
+    def has_matching_information(self, account_data: dict):
+        """
+        Checks if the customer information matches the provided data.
+
+        Parameters:
+            account_data (dict): Dictionary containing customer information.
+
+        Returns:
+            boolean: True if information matches, False otherwise.
+        """
+
+        # Check for a matching customer ID first
+        try:
+            if self.customer_id == account_data["customer_id"]:
+                return True
+        except KeyError as e:
+            print(f"Error: {e}")
+
+        # If no ID match, compare other relevant information
+        for key, value in account_data.items():
+            try:
+                if hasattr(self, key) and getattr(self, key) == value:
+                    return True
+            except KeyError as e:
+                print(f"Error: {e}")
+        return False
+
 
 
     def total_balance(self):
         total = sum(account.account_balance for account in self.accounts)
-
         print(f"The total amount in {self.customer_name} accounts is: {total}")
+
+        return total
+
+
+    def get_all_accounts(self):
+        return self.accounts
 
 
     def __str__(self):
@@ -319,13 +386,4 @@ if __name__ == '__main__':
 
 
 
-import tkinter as tk
-from Trapeza_gui import BankInterface
 
-root = tk.Tk()
-
-app = BankInterface(root)
-
-root.protocol("WM_DELETE_WINDOW", app.on_closing)# Set up an event handler for when the application is closed
-
-root.mainloop()

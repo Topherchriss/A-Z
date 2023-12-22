@@ -1,0 +1,15 @@
+- customer_name: Doe
+  account_number: 123
+  account_holder: Onyi
+  customer_id: 1
+  default_balance: 100
+- customer_name: Fuwe
+  account_number: 456
+  account_holder: Jane
+  customer_id: 2
+  default_balance: 200
+- customer_name: Livi
+  account_number: 789
+  account_holder: Yobuk
+  customer_id: 3
+  default_balance: 500

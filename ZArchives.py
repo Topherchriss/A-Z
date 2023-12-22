@@ -1,10 +1,11 @@
+"""
 import os
 import json
 import tkinter as tk
 from tkinter import messagebox
 from Alpha import BankAccount
 from Alpha import BankCustomer
-from json_utils import save_bank_account_data, load_bank_account_data
+from json_utils import save_bank_account_data, load_bank_account_data, save_bank_customer_data, load_bank_customer_data
 
 class BankInterface:
     """
@@ -55,6 +56,7 @@ class BankInterface:
 
         on_closing(self) -> None:
             Save the account data before closing the application.
+
 
     """
 
@@ -141,40 +143,69 @@ class BankInterface:
         self.customer3 = BankCustomer(customer_name="Zigi Zige")
 
         self.customer1_account = BankAccount(account_number="1000101", account_holder="Jean Maswa", customer_id="1456", default_balance=10000)
+        save_bank_account_data(self.customer1_account, "account_data")
         self.customer2_account = BankAccount(account_number="1000102", account_holder="Chachu Mulumba", customer_id="2567",  default_balance=1500)
+        save_bank_account_data(self.customer2_account, "account_data")
         self.customer3_account = BankAccount(account_number="1000103", account_holder="Zigi Zige", customer_id="3678", default_balance=2000)
+        save_bank_account_data(self.customer3_account, "account_data")
+
 
         # Add accounts to customers
         self.customer1.addAccount(self.customer1_account)
+        save_bank_customer_data(self.customer1, "customer_data.json")
         self.customer2.addAccount(self.customer2_account)
+        save_bank_customer_data(self.customer2, "customer_data.json")
         self.customer3.addAccount(self.customer3_account)
+        save_bank_customer_data(self.customer3, "customer_data.json")
+
+
 
 
         self.selected_customer = None
         self.selected_account = None
         self.account_data = {}
 
+        """
          # Load account data from JSON file
+         """
         try:
-            account_data = load_bank_account_data("account_data.json")
+            self.account_data = load_bank_account_data("account_data.json")
+            print("JSON here i come")
         except InvalidJSONFormatError as e:
             print("Error loading account data:", e)
-        print("Account data found proceeding to select account")
-
-        self.selected_account = self.customer1_account
-        self.selected_customer = self.customer1
-        print(f"customer selected:{self.selected_customer} account selected: {self.selected_account}")
-
-        self.account_data = load_bank_account_data(self.selected_account)
-
-        # Update the display after setting the selected customer and account
-        self.update_display()
-
-    def select_cusomer(self, customer):
+        print("Account data found proceeding to select account...")
+        """
+        # Load customer data from JSON file
+        """
         try:
-            account = load_bank_account_data('account_data.json')
-        except FileNotFoundError:
-            print("No existing account data")
+            self.customer_data = load_bank_customer_data("customer_data.json")
+            print("JSON here I come")
+        except Exception as e:
+            print("Error loading customer data:", e)
+
+        self.switch_customer("Jean Maswa")
+
+
+        # Select the account based on the loaded data, or choose a default account
+        default_customer = self.customer2_account  # Default to customer1_account if necessary
+        self.selected_customer = self.customer_data
+        print(f"Customer selected: {self.selected_account}")
+
+        default_account = self.customer2  # Default to customer2 if necessary
+        self.selected_account = self.selected_customer.accounts[0] if self.selected_customer.accounts else default_account
+
+        print(f"Account selected:{self.selected_account}")
+
+
+        self.update_display(self.selected_account)
+
+
+
+    #def select_customer(self, customer):
+        #try:
+            #self.account_data = load_bank_account_data('account_data.json')
+        #except FileNotFoundError:
+            #print("No existing account data")
 
 
     # Method to save the BankAccount data to the JSON file
@@ -186,16 +217,16 @@ class BankInterface:
 
 
     #Methd to load account data
-    def load_account_data(self, account_data):
+    def load_account_data(self, selected_account, account_data="account_data.json"):
         # Check if the JSON file exists
         if not os.path.exists('account_data.json'):
             print("Account data file not found.")
             return None
+
         try:
-            #account_data = load_bank_account_data("account_data.json")
             if account_data:
                 self.selected_account = account_data
-                print("Account data loaded successfully")
+                print(f"{self.selected_account}'s Account data loaded successfully")
             else:
                 print("No account data found")
         except Exception as e:
@@ -213,47 +244,52 @@ class BankInterface:
             print("Account data updated and saved successfully")
 
 
-    def update_display(self):
+    def update_display(self, selected_account):
 
-        # Load account data from JSON file
-        try:
-            account_data = load_bank_account_data("account_data.json")
-        except Exception as e:
-            print(f"An error occurred while loading account data: {e}")
-            return
+        if self.selected_account and isinstance(self.selected_account, dict):
+            # Ensure that 'account_balance' is present in the selected account
+            stored_balance = self.selected_account.get("account_balance", 0)
 
-        if account_data:
-            # Update selected account and customer if account data is valid
-            self.selected_account = self.customer1_account
-            self.selected_customer = self.customer1
+            # Calculate previous transactions
+            previous_transactions = sum(
+                entry.get("Amount deposited", 0) if entry.get("Type of transaction") == "Deposit"
+                else -entry.get("Amount withdrawn", 0)
+                for entry in self.selected_account.get("transaction_history", [])
+            )
 
             # Calculate total balance
-            stored_balance = self.selected_account.account_balance
-            previous_transactions = sum(
-                entry["Amount deposited"]
-                if entry["Type of transaction"] == "Deposit"
-                else -entry["Amount withdrawn"]
-                for entry in self.selected_account.transaction_history
-            )
             total_balance = stored_balance + previous_transactions
 
             # Update display elements with valid data
-            self.label_customer_name.config(text=f"Customer's Name: {self.selected_account.account_holder}")
-            self.label_account_number.config(text=f"Customer's account number: {self.selected_account.account_number}")
+            self.label_customer_name.config(text=f"Customer's Name: {self.selected_account.get('account_holder', '')}")
+            self.label_account_number.config(text=f"Customer's account number: {self.selected_account.get('account_number', '')}")
             self.label_balance.config(text=f"Current Balance: ${total_balance:.2f}")
+
 
         else:
             # Display error message if account data is not found
             print("No account data found")
 
 
-    # Method to switch customer and update the display
-    def switch_customer(self, customer):
-        self.selected_customer = customer1
-        # For simplicity, every customer has only one account as of now
-        self.selected_account = customer1.accounts[0]
-        self.load_account_data(account_data)
-        self.update_display()
+    def switch_customer(self, customer_name):
+    # Find the desired customer in the loaded customer data
+        desired_customer = self.customer_data
+
+        if desired_customer:
+            # Set the selected customer and account
+            self.selected_customer = desired_customer
+            # Load account data for the selected customer
+            self.account_data = self.load_account_data("account_data.json")
+
+            self.selected_account = self.account_data
+
+
+            # Update the display
+            self.update_display(self.selected_account)
+        else:
+            print(f"Customer '{customer_name}' not found.")
+
+
 
     # Method to display notifications
     def display_notification(self, message):
@@ -300,6 +336,7 @@ class BankInterface:
 
             self.check_and_save_data()
             self.save_account_data(self.selected_account, "account_data.json")
+            save_bank_customer_data(self.selected_account, "customer_data.json")
 
             print("Deposit data saved")
 
@@ -549,8 +586,8 @@ class BankInterface:
             calc_window.grid_rowconfigure(i, weight=1)
             calc_window.grid_columnconfigure(i, weight=1)
 
-        """Used the eval() function for simplicty but can a well as implement the Calculator class from Extras and express it using the logic below"""
-    """
+        Used the eval() function for simplicty but can as well as implement the Calculator class from Extras and express it using the logic below
+
     #method to perform evaluation logic
     def evaluate_expression(expression, calculator):
 
@@ -600,7 +637,7 @@ class BankInterface:
 
         # Return the final result
         return operand_stack[0]
-        """
+
 
     def clear_account_data(self):
 
@@ -645,3 +682,384 @@ class BankInterface:
         print("Account data saved. Destroying the window.")
 
         self.master.destroy()
+
+
+
+
+
+
+import tkinter as tk
+from Alpha import BankAccount, BankCustomer
+
+class InterfaceBank:
+    # ... (other methods and attributes)
+
+    def create_account_window(self):
+        # Create a new window for creating accounts
+        account_window = tk.Toplevel(self.master)
+        account_window.title("Create Account")
+
+        # Labels for account creation
+        label_account_number = tk.Label(account_window, text="Account Number:")
+        label_account_holder = tk.Label(account_window, text="Account Holder:")
+        label_customer_id = tk.Label(account_window, text="Customer ID:")
+        label_default_balance = tk.Label(account_window, text="Default Balance:")
+
+        # Entry fields for account creation
+        entry_account_number = tk.Entry(account_window)
+        entry_account_holder = tk.Entry(account_window)
+        entry_customer_id = tk.Entry(account_window)
+        entry_default_balance = tk.Entry(account_window)
+
+        # Button to add the account
+        button_add_account = tk.Button(account_window, text="Add Account",
+                                       command=lambda: self.add_account(entry_account_number.get(),
+                                                                         entry_account_holder.get(),
+                                                                         entry_customer_id.get(),
+                                                                         entry_default_balance.get(),
+                                                                         account_window))
+
+        # Grid layout for account creation window
+        label_account_number.grid(row=0, column=0, padx=10, pady=10)
+        entry_account_number.grid(row=0, column=1, padx=10, pady=10)
+        label_account_holder.grid(row=1, column=0, padx=10, pady=10)
+        entry_account_holder.grid(row=1, column=1, padx=10, pady=10)
+        label_customer_id.grid(row=2, column=0, padx=10, pady=10)
+        entry_customer_id.grid(row=2, column=1, padx=10, pady=10)
+        label_default_balance.grid(row=3, column=0, padx=10, pady=10)
+        entry_default_balance.grid(row=3, column=1, padx=10, pady=10)
+        button_add_account.grid(row=4, column=0, columnspan=2, pady=10)
+
+    def add_account(self, account_number, account_holder, customer_id, default_balance, account_window):
+        # Validate the input data
+        if not account_number or not account_holder or not customer_id or not default_balance:
+            self.display_notification("All fields are required for account creation.")
+            return
+
+        # Create a new account data dictionary
+        account_data = {
+            "account_number": account_number,
+            "account_holder": account_holder,
+            "customer_id": customer_id,
+            "account_balance": float(default_balance),  # Assuming default_balance is a float
+        }
+
+        # Create a new account and add it to the customer
+        new_account = self.create_account(self.bank_customer, account_data)
+
+        # Display notification
+        self.display_notification(f"Account {account_number} created successfully.")
+
+        # Close the account creation window
+        account_window.destroy()
+
+        In this example, create_account_window creates a new window with entry fields for account details and a button to add the account. The add_account method is called when the "Add Account" button is clicked, and it validates the input data, creates a new account, and adds it to the associated customer. The notification is updated accordingly.
+
+
+        def save_data(self):
+
+        def create_account_window(self):
+        # Create a new window for creating accounts
+        account_window = tk.Toplevel(self.master)
+        account_window.title("Create Account")
+
+        # Labels for account creation
+        self.label_account_number = tk.Label(account_window, text="Account Number:")
+        self.label_account_holder = tk.Label(account_window, text="Account Holder:")
+        self.label_customer_id = tk.Label(account_window, text="Customer ID:")
+        self.label_default_balance = tk.Label(account_window, text="Default Balance:")
+
+                # Entry fields for account creation
+        self.entry_account_number = tk.Entry(account_window)
+        self.entry_account_holder = tk.Entry(account_window)
+        self.entry_customer_id = tk.Entry(account_window)
+        self.entry_default_balance = tk.Entry(account_window)
+
+            # Button to add the account
+        self.button_add_account = tk.Button(account_window, text="Add Account",
+                                            command=lambda: self.add_account(entry_account_number.get(),
+                                                                              entry_account_holder.get(),
+                                                                              entry_customer_id.get(),
+                                                                              entry_default_balance.get(),
+                                                                              account_window))
+
+        # Grid layout for account creation window
+        self.label_account_number.grid(row=0, column=0, padx=10, pady=10)
+        self.entry_account_number.grid(row=0, column=1, padx=10, pady=10)
+        self.label_account_holder.grid(row=1, column=0, padx=10, pady=10)
+        self.entry_account_holder.grid(row=1, column=1, padx=10, pady=10)
+        self.label_customer_id.grid(row=2, column=0, padx=10, pady=10)
+        self.entry_customer_id.grid(row=2, column=1, padx=10, pady=10)
+        self.label_default_balance.grid(row=3, column=0, padx=10, pady=10)
+        self.entry_default_balance.grid(row=3, column=1, padx=10, pady=10)
+        self.button_add_account.grid(row=4, column=0, columnspan=2, pady=10)
+
+    Saves the current customer data to the JSON file
+    try:
+      with open(self.filename, "w") as file:
+        json_data = []
+        for customer in self.bank_customers:
+          json_data.append(customer.to_json())
+        json.dump(json_data, file, indent=4)
+        print("Account data saved")
+    except Exception as e:
+      print(f"Error saving data to {self.filename}: {e}")
+
+
+      def to_json(self):
+        # Convert transaction_history list to a dictionary
+        transaction_history_dict = [
+            {"Type of transaction": entry.get("Type of transaction", ""),
+             "Amount": entry.get("Amount deposited", 0.0)}
+            for entry in self.transaction_history
+        ]
+
+        return {
+            "account_number": self.account_number,
+            "account_holder": self.account_holder,
+            "customer_id": self.customer_id,
+            "account_balance": self.account_balance,
+            "transaction_history": transaction_history_dict,
+            "budget_categories": self.budget_categories,
+            "cumulative_expenses": self.cumulative_expenses,
+            "threshold": self.threshold
+        }
+
+    @classmethod
+    def from_json(cls, data):
+        print("Data before creating instance:", data)
+
+        # Initialize instance with default values
+        instance = cls()
+
+         # Check if instance is successfully initialized
+        if instance:
+            print("succesfully initialized")
+
+        # Check if data is a dictionary
+            if isinstance(data, dict):
+                print("Data is a dictionary. Processing...")
+
+                # Retrieve the transaction history and convert it back to a list
+                transaction_history_list = [
+                    {"Type of transaction": entry.get("Type of transaction", ""),
+                    "Amount deposited": entry.get("Amount", 0.0)}
+                    for entry in data.get("transaction_history", [])
+                ]
+
+                    # Update instance with data
+                instance.account_number = data.get("account_number", "")
+                instance.account_holder = data.get("account_holder", "")
+                instance.customer_id = data.get("customer_id", "")
+                instance.default_balance = data.get("account_balance", 0)
+                instance.transaction_history = transaction_history_list
+                instance.budget_categories = data.get("budget_categories", {})
+                instance.cumulative_expenses = data.get("cumulative_expenses", {})
+                instance.threshold = data.get("threshold", 0)
+
+                print("Created instance:", instance)
+            else:
+                print("Invalid data format. Expected dictionary.")
+        return instance
+
+     """
+"""    account_data = {
+        "account_number": account_number,
+        "account_holder": account_holder,
+        "customer_id": customer_id,
+        "account_balance": default_balance,
+    }
+
+    # Create and add account using CreateAccount object
+    new_account = self.create_account(account_data)
+
+    # Update data storage
+    # ...
+
+    # Display success message and close window
+    self.display_notification(f"Account {account_number} created successfully.")
+    account_window.destroy()
+
+
+
+
+
+
+    def create_example_instance(self):
+        #self.data_ops.bank_customers = []
+
+
+        #Create a BankAccount instance
+        test_bank_account_instance1 = BankAccount(account_number="111", account_holder="MIMI",   customer_id="1234", default_balance=900)
+        test_bank_account_instance2 = BankAccount(account_number="222", account_holder="WEWE",   customer_id="12345", default_balance=800)
+        test_bank_account_instance3 = BankAccount(account_number="333", account_holder="SISI",   customer_id="123456", default_balance=8000)
+
+        # Create a BankCustomer instance
+        customer_1 = BankCustomer(customer_name="MIMI", account_number="111", account_holder="MIMI", customer_id="1234", default_balance=900)
+
+        customer_2 = BankCustomer(customer_name="WEWE", account_number="222", account_holder="WEWE", customer_id="12345", default_balance=800)
+
+        customer_3 = BankCustomer(customer_name="SISI", account_number="333", account_holder="SISI", customer_id="123456", default_balance=8000)
+
+        # Add the BankAccount to the BankCustomer
+        customer_1.addAccount(test_bank_account_instance1)
+        customer_2.addAccount(test_bank_account_instance2)
+        customer_3.addAccount(test_bank_account_instance3)
+        self.data_ops.save_data()
+
+        # Update the DataOps instance with the BankCustomer
+        self.data_ops.bank_customers.append(customer_1)
+        self.data_ops.bank_customers.append(customer_2)
+        self.data_ops.bank_customers.append(customer_3)
+        print("Customers have been appended")
+        self.data_ops.save_data()
+
+        """
+        # Select the customers
+        """
+        #self.data_ops.selected_customer = test_bank_account_instance
+        print(f"LIST: {len(self.data_ops.bank_customers)}")
+        self.data_ops.selected_customer = self.load_customer_data(account_number="1002")
+        #self.data_ops.selected_customer= self.data_ops.select_customer_by_account_number(account_number="1002")
+        print(f"Seleted customer: {self.data_ops.selected_customer}")
+
+        # Deposit and withdraw operations
+        self.data_ops.selected_customer.deposit(1000)
+        self.data_ops.selected_customer.withdraw(600)
+        self.data_ops.selected_customer.checkBalance()#(customer_id="1234", account_number="111")
+
+        # Save data
+        self.on_closing()
+        """
+        """
+        data_ops = DataOps("customers.yaml", []) #create DataOps instance
+        data_ops.load_data("customers.yaml") #Load data from the file
+        all_customers = data_ops.get_all_customers()
+        data_ops.select_customer_by_account_number(account_number="123456")
+        data_ops.selected_customer.deposit(1000)
+        data_ops.selected_customer.withdraw(80)
+        data_ops.selected_customer.checkBalance()
+        #self.selected_customer.show_transactions()
+        #data_ops.select_customer(0) #Select first customer
+        #new_customer = BankCustomer(customer_name="John", account_number="123456", account_holder="John Mufuwe", customer_id="7890", default_balance=1000)
+        #data_ops.bank_customers.append(new_customer)
+        #data_ops.save_data("customers.yaml", new_customer)
+
+        self.setup_data_ops("customers.yaml")
+        account_data = {
+            "customer_name": "Chici",
+            "account_number": "c12345v",
+            "account_holder": "Icihc",
+            "customer_id": "987",
+            "default_balance": "400",
+        }
+        create_account_service = CreateAccount(self.data_ops, self.customer)
+        account = create_account_service.create_account(account_data)
+        self.data_ops.save_data("customers.yaml", self.data_ops.bank_customers)
+        """
+    """
+class TestDataOpsSaveData(unittest.TestCase):
+
+    def setUp(self):
+        self.valid_data_file = "valid_data_file.yaml"
+        self.test_save_data = "test_save_data.yaml"
+        self.creat_account_service = CreateAccount()
+        self.customer = Mock(spec=BankCustomer)
+        self.data_ops = DataOps(self.test_save_data, bank_customers=[])
+        self.create_account_service = CreateAccount(self.data_ops, self.customer)
+
+    @patch("builtins.open", side_effect=lambda f, m: mock_open().return_value)
+    @patch("yaml.safe_load",return_value=[])
+
+    def test_save_data(self, mock_safe_load, mock_open):
+        account_data = {
+            "customer_name": "Mwalimu Daktari",
+            "account_number": "12345",
+            "account_holder": "Teacher Doctor",
+            "customer_id": "1",
+            "default_balance": 0.0,
+        }
+        customer = self.create_account_service.create_customer(account_data)
+        self.data_ops.save_data(self.test_save_data, customer)
+
+        # Verify the saved data
+        with open(self.test_save_data, "r") as file:
+            saved_data = yaml.safe_load(file)
+            self.assertEqual(len(saved_data), 2)
+
+
+class InterfaceBank:
+
+    def __init__(self, master, data_ops: DataOps, bank_account: BankAccount, account_creation: CreateAccount):
+        self.master = master
+        self.master.title("A-Z TRAPEZA")
+        self.data_ops = data_ops
+        self.bank_account = bank_account
+        self.account_creation = account_creation
+        self.customer = None
+
+
+        #Labels for Customer info:
+        self.label_customer_name = tk.Label(master, text="Customer's Name:")
+        self.label_account_number = tk.Label(master, text="Customer's account number:")
+        self.label_amount = tk.Label(master, text="Amount:")
+        self.label_customer_id = tk.Label(master, text="Enter your PIN:")
+        self.label_budget_category = tk.Label(master, text="Budget Category:")
+        self.label_budget_limit = tk.Label(master, text="Budget Limit:")
+        self.label_balance = tk.Label(master, text="Current Balance: $0.00")
+        self.label_set_threshold = tk.Label(master, text="Balance Threshold")
+
+
+        #Entry fields
+        self.entry_customer_name = tk.Entry(master)
+        self.entry_account_number= tk.Entry(master)
+        self.entry_amount = tk.Entry(master)
+        self.entry_customer_id = tk.Entry(master)
+        self.entry_budget_category = tk.Entry(master)
+        self.entry_budget_limit = tk.Entry(master)
+        self.entry_set_threshold = tk.Entry(master)
+
+
+        #Buttons
+        self.button_deposit = tk.Button(master, text="Deposit", command=self.deposit_cash)
+        self.button_withdraw = tk.Button(master, text="Withdraw", command=self.withdraw_cash)
+        self.button_transactions = tk.Button(master, text="Transactions", command=self.show_transactions)
+        self.button_balance = tk.Button(master, text="Check Balance", command=self.check_balance)
+        self.button_set_budget = tk.Button(master, text="Set Budget", command=self.set_budget)
+        self.button_spend_budget = tk.Button(master, text="Spend Budget", command=self.spend_budget)
+        self.button_select_customer = tk.Button(master, text="Select Customer", command=self.create_example_instance) #000
+        self.button_set_threshold = tk.Button(master, text="Set Threshold", command=self.set_threshold)
+        self.button_create_account = tk.Button(master, text="create account", command=self.create_account_window)
+
+
+        #Grid layout
+        self.label_customer_name.grid(row=0, column=0, padx=10, pady=10)
+        self.entry_customer_name.grid(row=0, column=1, padx=10, pady=10)
+        self.label_account_number.grid(row=1, column=0, padx=10, pady=10)
+        self.entry_account_number.grid(row=1, column=1, padx=10, pady=10)
+        self.label_amount.grid(row=2, column=0, padx=10, pady=10)
+        self.entry_amount.grid(row=2, column=1, padx=10, pady=10)
+        self.label_customer_id.grid(row=3, column=0, padx=10, pady=10)
+        self.entry_customer_id.grid(row=3, column=1, padx=10, pady=10 )
+        self.button_deposit.grid(row=4, column=0, columnspan=2, pady=10)
+        self.button_withdraw.grid(row=5, column=0, columnspan=2, pady=10)
+        self.button_transactions.grid(row=6, column=0, columnspan=2, pady=10)
+        self.button_balance.grid(row=7, column=0, columnspan=2, pady=10)
+        self.label_balance.grid(row=8, column=0, columnspan=2, pady=10)
+        self.label_set_threshold.grid(row=9, column=0, padx=10, pady=10)
+        self.entry_set_threshold.grid(row=9, column=1, padx=10, pady=10)
+        self.label_budget_category.grid(row=10, column=0, padx=10, pady=10)
+        self.entry_budget_category.grid(row=10, column=1, padx=10, pady=10)
+        self.label_budget_limit.grid(row=11, column=0, padx=10, pady=10)
+        self.entry_budget_limit.grid(row=11, column=1, padx=10, pady=10)
+        self.button_set_budget.grid(row=12, column=0, columnspan=2, pady=10)
+        self.button_spend_budget.grid(row=12, column=1, columnspan=2, pady=10)
+        self.button_set_threshold.grid(row=13, column=0, columnspan=2, pady=10)
+        self.button_select_customer.grid(row=13, column=1, columnspan=2, pady=10)
+        #self.button_calculator.grid(row=13, column=1, columnspan=2, pady=10)
+        self.button_create_account.grid(row=14, column=1, columnspan=3, pady=10)
+
+        #Notification panel
+        self.notification_text = tk.Text(master, height=2, width=40)
+        self.notification_text.grid(row=15, column=0, columnspan=2, pady=20)
+"""
