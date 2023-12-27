@@ -1,25 +1,25 @@
 # A-Z TRAPEZA
 
-Simple Banking System
+A Simple Banking System
 
 ## Overview
 
-A-Z TRAPEZA is a simple banking system application built with Python and the tkinter library for the graphical user interface. This application allows users to manage bank accounts, make deposits, withdrawals, check balances, view transaction history and perform budget related actions.
+A-Z TRAPEZA is a simple banking system application built with pure Python and the tkinter library for the graphical user interface. This application allows users to interact with a real life banking and finacial managment tool.
 
 ## Features
 
 - **Account Management:** Users can create and manage multiple bank accounts.
-- **Budget Management:** Set spending limits for specific categories, track expenses, and receive notifications for budget thresholds.
+- **Budget Management:** Set spending limits for specific categories, track expenses, view budget limits,
 - **Deposit:** Make deposits into the selected account with a customizable notification for large deposits.
 - **Withdrawal:** Perform withdrawals with balance validation and notifications for large withdrawals.
 - **Check Balance:** View the current balance of the selected account.
 - **Transaction History:** Access a detailed transaction history for the selected account.
 - **Graphical User Interface:** User-friendly interface intergrated with a basic **calculator** for quick calculations and easy interaction.
--Additionally there is a **CLEAR** feature that enables the user to clear ```account_data.json``` file
+-Additionally there is a **CLEAR** feature that enables the user to clear ```data_file.yaml``` file
 
 ## Getting Started
 
-Follow the installation instructions below to set up the A-Z TRAPEZA banking system on your local machine.
+Follow the installation instructions below to set up the A-Z TRAPEZA on your local machine.
 
 ### Prerequisites
 
@@ -35,7 +35,7 @@ Clone the repository:
 
    cd A-Z
 
-   python Alpha.py
+   python Gui_Trapeza.py
    ```
 
 ## Running Tests
@@ -47,7 +47,7 @@ Ensure the stability and functionality of A-Z TRAPEZA by running a set of compre
 Before running the tests, make sure you have the required dependencies installed:
 
 - Python (version 3.X.X)
-- unittest library (comes with Python)
+- unittest library
 
 ### Running the Tests
 
@@ -61,37 +61,59 @@ python -m unittest discover -s tests -p 'test_Alpha.py'
 
 1. Launching the Application:
 
-Run the application using the provided script ('python Alpha.py').
-    The GUI will appear, allowing users to interact with the banking system.
+Run the application using the provided script ('python Gui_Trapeza.py').
+   The GUI will appear, allowing users to interact with the banking system.
 
-2. ## Pre-loaded Test Accounts
+2. Account Creation and Selection
 
-For testing and demonstration purposes, three pre-loaded test accounts are available. Use these accounts to explore the application's features.
+A-Z TRAPEZA unlike before where there were only 3 predifined accounts; now allows users to create their bank accounts, providing a more personalized experience. Below is an overview of the account creation and selection process:
 
-1. **Account 1**
-   - Customer Name: Jean Maswa
-   - Account Number: 1000101
-   - Customer ID (PIN): 1456
-   - Default Balance: $1000.00
+### Creating an Account
 
-2. **Account 2**
-   - Customer Name: Chachu Mulumba
-   - Account Number: 1000102
-   - Customer ID (PIN): 2567
-   - Default Balance: $1500.00
+Users can create a new bank account by entering the required information; customer name, account number, account holder, initial balance(regardless of the amount entered the account balance will always be initialized to zero($0)), and a secure Customer ID(PIN). The application validates the input and creates a new account for the user. Enhancing user interaction and customization!
 
-3. **Account 3**
-   - Customer Name: Zigi Zige
-   - Account Number: 1000103
-   - Customer ID (PIN): 3678
-   - Default Balance: $2000.00
+### Selecting an Account
 
-**Important:** These accounts are not real, and any changes made will not have any impact on actual bank accounts or financial transactions. Do not use real information for testing purposes.
+After creating an account, users can select it for performing various banking operations by inputig the account number used to create the account and pressing the select customer button. The selected account becomes the active account for the session but can as well as quickly change to another valid account through the same process.
+
+### Account Selection Fallback
+
+In case of any issues with account selection, such as entering a non-recognized Account Number, selecting a non-existing account, or failure to correctly load data, the application provides a fallback mechanism(You will encounter an error when you try to interact with the application without selecting a customer). A predefined default account, named 'IamTheDefaultCustomer' is available for users to interact with the application even if the account selection process fails. The details of the default account are as follows:
+
+- **Account Name:** IamTheDefaultCustomer
+- **Account Number:** 1010101
+- **Customer ID (PIN):** 2345
+- **Account Balance:** $100,000.00
+
+This default account ensures that users can continue exploring and testing the application even if they encounter difficulties with their created accounts.
 
 
 3. Performing Transactions:
-    Use the provided entry fields to input customer name, account number, amount, and PIN for transactions.
-    Buttons are available for deposit, withdrawal, checking balance, and viewing transactions.
+
+    Use the provided entry fields to input, account number, amount, budget category name, budget limit, threshold, and PIN for transactions diffrent transactions require diffrent inputs but all transactions require the customer ID(PIN).
+    Buttons are available "Deposit", "Withdraw", "Transactions(The trasnaction history)", "Create Account(The create account window)", "Select Customer(The MUST press button with valid account number before performing any actions)", "Set Budget(Button to set aa specific budget limit)", "Budget Limit(Button to check the bdget limit of a given budget category)","Spend Budget(Button to spend from a given budget category)", "Check Balance", "Set Threshold(Button to set a threshold for the active account)", "Clear Data(Button to clear data)", "Calculate(Button to open calcultor window)", "Budget Categories(Button to view all of your budget categories and their limits)", "Exit A-Z(Button to safley exit the App)".
+
+4. Budget Management
+
+### Setting a Budget
+
+Users can set spending limits for different categories. When setting a budget, users need to provide the customer ID, the desired budget limit, and the category for which the budget is being set. The application does a series of validations before proceeding to setting the budget.
+
+### Viewing Budget Categories
+
+Users can view their existing budget categories along with their respective limits. This provides a quick overview of the allocated budgets for different spending categories.
+
+### Viewing Budget Limit
+
+Users can check the current limit for a specific budget category. This is helpful for users to stay informed about their spending limits in various categories.
+
+### Spending from Budget
+
+To maintain control over expenses, users can spend from their budget by providing the customer ID, the category from which they want to spend from, and the amount. The application checks whether the spending amount is within the budget limit for the specified category.
+
+### Notifications
+
+Users receive notifications for budget-related actions, such as setting a budget, reaching budget limits, or overspending. Notifications provide timely alerts to help users manage their finances effectively.
 
 ### Contributing
 
@@ -136,6 +158,32 @@ Be responsive to feedback and make necessary adjustments.
 ### License
 
 This project is licensed under general Public License - see the LICENSE file for details
+
+## Future Vision
+
+A-Z TRAPEZA is an evolving project with a vision to incorporate additional features and improvements in the future.
+
+### 4. Web Application
+
+Explore the development of a web application to provide users with the flexibility to manage their accounts on the go. Allowing users to customize their account settings, including profile pictures, account names, and notification preferences, for a more personalized banking experience.
+
+### 1. Implment Security Features
+
+Implement security layers, to ensure a secure and trustworthy banking experience for users.
+
+### 2. Advanced Budget Analytics
+
+Introduce advanced analytics tools to help users analyze their spending patterns, set dynamic budget limits, and receive personalized financial insights.
+
+### 5. Community Collaboration
+
+Encourage collaboration and contributions from community to enhance the application's features, fix bugs, and provide feedback.
+
+### 6. Integration with Financial Institutions
+
+Explore possibilities for integrating the application with real financial institutions, providing users with the ability to link their actual bank accounts and manage them through A-Z TRAPEZA.
+
+These future plans align with commitments to delivering a robust and user-friendly banking system. Contributions and feedback from the community are highly valued as work towards achieving these goals goes on.
 
 ### Acknowledgments
 . Special thanks to **tkinter** for providing  the  GUI framework.

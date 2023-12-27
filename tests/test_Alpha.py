@@ -1,11 +1,14 @@
 import unittest
 from Alpha import BankAccount, BankCustomer
+import Gui_Trapeza
+from exceptions import InsufficientFundsError, InvalidDepositAmountError, InvalidCustomerIDError, InvalidAccountNumberError, InvalidBudgetLimitError, BudgetCategoryNotFoundError, BudgetCategoryAlreadyExistsError, InvalidThresholdAmountError, AccountCreationError, InvalidWithrawalAmountError, WrongCustomerIdError
 
 
 class TestTrapeza(unittest.TestCase):
 
     """
     Test cases for the BankAccount class in the Alpha module.
+
 
     Methods:
         setUp(self) -> None:
@@ -31,9 +34,7 @@ class TestTrapeza(unittest.TestCase):
 
         test_trans_history(self) -> None:
             Test the transaction history of a BankAccount.
-
-    """
-
+"""
 
     def setUp(self):
         # Set up a BankAccount instance for testing
@@ -44,42 +45,43 @@ class TestTrapeza(unittest.TestCase):
 
 
     def test_deposit(self):
-        self.account.deposit(5000)
+        self.account.deposit_money(5000, customer_id="1456")
         self.assertEqual(self.account.account_balance, 15000, "Deposit of $5000 should result in a balance of $6000.0")
 
 
     def test_invalid_deposit(self):
-        with self.assertRaises(ValueError):
-            self.account.deposit(-300)
-
+        with self.assertRaises(InvalidDepositAmountError) as context:
+            self.account.deposit_money(-300, customer_id="1456")
+        self.assertEqual(str(context.exception), "Invalid deposit amount. Please enter a valid number.")
 
     def test_withdrawal(self):
-        self.account.withdraw(5000)
+        self.account.withdraw_money(5000, customer_id="1456")
         self.assertEqual(self.account.account_balance, 5000, "Withdrawal of $5000 should result in a balance of $500.0")
 
 
     def test_less_funds(self):
-        with self.assertRaises(ValueError):
-            self.account.withdraw(20000)
+        with self.assertRaises(InsufficientFundsError) as context:
+            self.account.withdraw_money(200000, customer_id="1456")
+        self.assertEqual(str(context.exception), "Insufficient funds to proceed with withdrawal.")
 
 
     def test_invalid_withdrawal(self):
-        with self.assertRaises(ValueError):
-            self.account.withdraw(-390)
+        with self.assertRaises(InvalidWithrawalAmountError) as context:
+            self.account.withdraw_money(-390, customer_id="1456")
+        self.assertEqual(str(context.exception), "Invalid withdrawal amount. Please enter a valid number.")
 
 
     def test_trans_history(self):
-        self.account.deposit(5000)
-        self.account.withdraw(1000)
-        self.account.withdraw(500)
-        self.account.deposit(1500)
-        trans = self.account.get_transaction_history()
+        self.account.deposit_money(5000, customer_id="1456")
+        self.account.withdraw_money(1000, customer_id="1456")
+        self.account.withdraw_money(500, customer_id="1456")
+        self.account.deposit_money(1500, customer_id="1456")
+        trans = self.account.account_transactions(customer_id="1456", account_number="1000101")
+        self.assertIsNotNone(trans)
         self.assertEqual(len(trans), 4, "Transaction history should have four entities")
 
 
-
 from unittest.mock import patch
-
 class TestSendNotification(unittest.TestCase):
 
     """
@@ -110,7 +112,7 @@ class TestSendNotification(unittest.TestCase):
     @patch('builtins.print')
     def test_large_deposit_notification(self, mock_print):
         # Arrange
-        self.account.deposit(60000)
+        self.account.deposit_money(60000, customer_id="1456")
 
         # Act
         self.account.send_notification()
@@ -122,7 +124,7 @@ class TestSendNotification(unittest.TestCase):
     @patch('builtins.print')
     def test_large_withdrawal_notification(self, mock_print):
         # Arrange
-        self.account.withdraw(7000)
+        self.account.withdraw_money(7000, customer_id="1456")
 
         # Act
         self.account.send_notification()
@@ -134,21 +136,19 @@ class TestSendNotification(unittest.TestCase):
     @patch('builtins.print')
     def test_no_notification(self, mock_print):
         # Arrange - No significant events
-        self.account.deposit(2000)
+        self.account.deposit_money(2000, customer_id="1456")
 
         # Act
-        self.account.send_notification()
+        result = self.account.send_notification()
 
         # Assert
-        expected_message = "Dear customer your deposit of 2000.0 was succesful. Your new balance is: 12000.0"
-
-        mock_print.assert_called_with(expected_message)
+        self.assertFalse(result) #Notificaion method should not be called
 
     @patch('builtins.print')
     def test_below_threshold_notification(self, mock_print):
         #Arrange
-        self.account.set_threshold(9000)
-        self.account.withdraw(1500)
+        self.account.set_account_threshold(9000, customer_id="1456")
+        self.account.withdraw_money(1500, customer_id="1456")
 
         #Act
         self.account.send_notification()
@@ -209,7 +209,7 @@ class TestBudgetCategory(unittest.TestCase):
     @patch('builtins.print')
     def test_no_set_category(self, mock_print):
         #Arrange
-        self.account.set_budget(category="Shoping", limit=700)
+        self.account.set_budget_category(category="Shoping", limit=700, customer_id="1456")
 
         #Act
         self.account.budget_spending(category="School", amount=300)
@@ -223,7 +223,7 @@ class TestBudgetCategory(unittest.TestCase):
     @patch('builtins.print')
     def test_budget_exceed(self, mock_print):
         #Arrange
-        self.account.set_budget(category="Enta", limit=100)
+        self.account.set_budget_category(category="Enta", limit=100, customer_id="1456")
 
         #Act
         self.account.budget_spending(category="Enta", amount=5000)
@@ -238,7 +238,7 @@ class TestBudgetCategory(unittest.TestCase):
     @patch("builtins.print")
     def test_normal_budget_spending(self, mock_print):
 
-        self.account.set_budget(category="sports", limit=2000)
+        self.account.set_budget_category(category="sports", limit=2000, customer_id="1456")
 
         self.account.budget_spending(category="sports", amount=1000)
 
@@ -249,7 +249,7 @@ class TestBudgetCategory(unittest.TestCase):
 
     @patch('builtins.print')
     def test_invalid_amount(self, mock_print):
-        self.account.set_budget(category="vip", limit=4000)
+        self.account.set_budget_category(category="vip", limit=4000, customer_id="1456")
 
         self.account.budget_spending(category="vip", amount=-3000)
 
@@ -261,7 +261,7 @@ class TestBudgetCategory(unittest.TestCase):
 
     @patch('builtins.print')
     def test_excess_than_limit(self, mock_print):
-        self.account.set_budget(category="BILLS", limit=300)
+        self.account.set_budget_category(category="BILLS", limit=300, customer_id="1456")
 
         self.account.get_expense(category="BILLS", amount=700)
 
@@ -273,7 +273,7 @@ class TestBudgetCategory(unittest.TestCase):
     @patch('builtins.print')
     def test_normal_expense(self, mock_print):
 
-        self.account.set_budget(category="BILLS", limit=1000)
+        self.account.set_budget_category(category="BILLS", limit=1000, customer_id="1456")
 
         self.account.get_expense(category="BILLS", amount=500)
 
@@ -286,7 +286,7 @@ class TestBudgetCategory(unittest.TestCase):
     @patch('builtins.print')
     def test_expense_but_no_category(self, mock_print):
 
-        self.account.set_budget(category="A", limit=300)
+        self.account.set_budget_category(category="A", limit=300, customer_id="1456")
 
         self.account.get_expense(category="a", amount=200)
 
@@ -298,7 +298,7 @@ class TestBudgetCategory(unittest.TestCase):
     @patch('builtins.print')
     def test_limit_after_spending(self, mock_print):
 
-        self.account.set_budget(category="A", limit=500)
+        self.account.set_budget_category(category="A", limit=500, customer_id="1456")
 
         self.account.get_expense(category='A', amount=300)
 
@@ -306,32 +306,31 @@ class TestBudgetCategory(unittest.TestCase):
 
         mock_print.assert_called_with(expected_message)
 
+
     @patch('builtins.print')
     def test_set_threshold(self, mock_print):
+        with patch("Gui_Trapeza.messagebox.showinfo") as mock_showinfo:
 
-        self.account.set_threshold(288)
+            self.account.set_account_threshold(288, customer_id="1456")
 
-        expected_message = "Dear Jean Maswa a threshold of $288.0 was succesfully added for account 1000101"
-
-        mock_print.assert_called_with(expected_message)
+            mock_showinfo.assert_called_once_with('Success', 'Dear Jean Maswa a threshold of $288.0 was succesfully added for account number 1000101')
 
     @patch('builtins.print')
     def test_set_threshold_invalid_amount(self, mock_print):
 
-        self.account.set_threshold(-600)
+        with self.assertRaises(InvalidThresholdAmountError) as context:
+            self.account.set_account_threshold(-600, customer_id="1456")
 
-        expected_message = "Invalid threshold value provided"
+        self.assertEqual(str(context.exception), "Threshold must be more than a $1")
 
-        mock_print.assert_called_with(expected_message)
 
     @patch('builtins.print')
     def test_set_threshold_above_balance(self, mock_print):
 
-        self.account.set_threshold(15000)
+        with self.assertRaises(InsufficientFundsError) as context:
+            self.account.set_account_threshold(15000, customer_id="1456")
 
-        expected_message = "Threshold amount cannot exceded current account balance"
-
-        mock_print.assert_called_with(expected_message)
+        self.assertEqual(str(context.exception), "Threshold cannot be more than current account balance.")
 
 
 class TestBankCustomer(unittest.TestCase):

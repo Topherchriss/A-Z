@@ -6,7 +6,9 @@ class InsufficientFundsError(Exception):
 
     * The requested withdrawal amount is greater than the current account balance.
     * An attempt is made to debit the account for an amount exceeding the available funds.
-    * An attempt is made to set a budget category with a limit exceeding the current account balance
+    * An attempt is made to set a budget category with a limit exceeding the current account balance.
+    * The provided threshold value is higher than the current account balance.
+
 
     This exception helps ensure that financial operations respect the current account balance and prevent situations where the account goes into negative balance.
     """
@@ -122,7 +124,7 @@ class BudgetCategoryAlreadyExistsError(Exception):
         self.message = message
         super().__init__(self.message)
 
-class InvalidThresholdError(Exception):
+class InvalidThresholdAmountError(Exception):
     """
     Raised when an attempt is made to set a threshold for the account balance with an invalid value.
 
@@ -161,5 +163,41 @@ class WrongCustomerIdError(Exception):
     This exception ensures data integrity and avoids performing actions on unauthoritized accounts. Helps inform users about unsuccessful operation attempts due to wrong Customer ID(PIN);diffrent ones from the one used to create the account in.
     """
     def __init__(self, message="You entered the wrong Customer ID(PIN)"):
+        self.message = message
+        super().__init__(self.message)
+
+
+class NoCustomerSelectedError(Exception):
+    """
+    Raised when an operation requires a selected customer, but none is currently selected.
+
+    This exception is typically triggered when attempting to perform an action that requires an active customer selection, such as setting a budget or performing a transaction.
+    It ensures that the application user selects a customer before proceeding with certain operations and prevent users from performing operations on unauthoritized accounts
+    """
+    def __init__(self, message="Please select a customer first"):
+        self.message = message
+        super().__init__(self.message)
+
+
+class ExceedingBudgetLimitError(Exception):
+    """
+    Raised when an expense exceeds the budget limit set for a specific category.
+
+    This exception is typically triggered when attempting to spend an amount from a budget category, and the proposed expense surpasses the predefined budget limit.
+    It helps in maintaining financial discipline by preventing expenditures beyond the set limits.
+    """
+    def __inti__(self, message="Exceeding budget limit"):
+        self.message = message
+        super().__init__(self.message)
+
+
+class InvalidExpenseAmountError(Exception):
+    """
+    Raised when an attempt is made to spend an invalid or non-positive amount.
+
+    This exception is typically triggered when trying to perform an expense, and the provided amount is either not a valid numerical value or is less than $1.
+    It ensures that expenses are made with meaningful and positive values.
+    """
+    def __init__(self, message=("Invalid expense amount. Please enter a positive value.")):
         self.message = message
         super().__init__(self.message)

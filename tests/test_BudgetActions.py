@@ -3,9 +3,9 @@ import yaml
 import Alpha
 from unittest import TestCase
 from unittest.mock import patch, Mock, create_autospec, PropertyMock
-from Gui_Trapeza import CreateAccount, DataOps, AccountTransactions, BudgetActions
+from Gui_Trapeza import CreateAccount, DataOps, BudgetActions
 from Alpha import BankCustomer, BankAccount
-from exceptions import InvalidBudgetLimitError, BudgetCategoryAlreadyExistsError, InvalidCustomerIDError, InsufficientFundsError, WrongCustomerIdError, BudgetCategoryNotFoundError,InvalidThresholdError
+from exceptions import InvalidBudgetLimitError, BudgetCategoryAlreadyExistsError, InvalidCustomerIDError, InvalidThresholdAmountError, WrongCustomerIdError, BudgetCategoryNotFoundError, InvalidThresholdAmountError, InsufficientFundsError
 
 class TestBudgetActions(unittest.TestCase):
     """
@@ -528,7 +528,7 @@ class TestBudgetActionsThreshold(unittest.TestCase):
             customer_id = "1234"
 
             # Test threshold with invalid threshold value
-            with self.assertRaises(InvalidThresholdError) as context:
+            with self.assertRaises(InvalidThresholdAmountError) as context:
                 self.budget_actions.threshold(threshold, customer_id)
 
             # Assertions

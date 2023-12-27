@@ -1,15 +1,17 @@
-import tkinter as tk
 import yaml
 import unittest
+import tkinter as tk
+from tkinter import ttk
 from tkinter import messagebox
 from Alpha import BankAccount, BankCustomer
-from exceptions import InsufficientFundsError, InvalidDepositAmountError, InvalidCustomerIDError, InvalidAccountNumberError, InvalidBudgetLimitError, BudgetCategoryNotFoundError, BudgetCategoryAlreadyExistsError, InvalidThresholdError, AccountCreationError, InvalidWithrawalAmountError, WrongCustomerIdError
+from exceptions import InsufficientFundsError, InvalidDepositAmountError, InvalidCustomerIDError, InvalidAccountNumberError, InvalidBudgetLimitError, BudgetCategoryNotFoundError, BudgetCategoryAlreadyExistsError, InvalidThresholdAmountError, AccountCreationError, InvalidWithrawalAmountError, WrongCustomerIdError, NoCustomerSelectedError
 
 class DataOps:
     def __init__(self, filename: str, bank_customers: BankCustomer):
         self.filename = filename
         self.bank_customers = bank_customers if bank_customers is not None else []
         self.selected_customer: BankCustomer | None = None
+        self.filename_use = "data_file.yaml"
 
     def load_data(self, filename):
         try:
@@ -86,7 +88,7 @@ class DataOps:
             print(f"Error saving data to {self.filename}: {e}")
 
 
-    def select_customer(self, customer_index: int):
+    def select_customer_by_index(self, customer_index: int):
         try:
             self.selected_customer = self.bank_customers[customer_index]
         except IndexError:
@@ -100,7 +102,7 @@ class DataOps:
         """
         self.load_data("valid_data.yaml")
 
-        defaultCustomer = BankAccount(account_number="1", account_holder="Default", customer_id="2", default_balance=1000 )
+        defaultCustomer = BankAccount(account_number="1010101", account_holder="IamTheDefaultCustomer", customer_id="2345", default_balance=100000)
 
         self.load_data("valid_data.yaml")
 
@@ -113,6 +115,10 @@ class DataOps:
                     if customer.account_number == account_number:
                         self.selected_customer = customer
                         return self.selected_customer
+                    else:
+                        self.selected_customer = defaultCustomer
+                        messagebox.showinfo("Default", f"Customer with account number {account_number} not found, default customer selected")
+                        return defaultCustomer
             else:
                 self.selected_customer = defaultCustomer
                 return defaultCustomer
@@ -245,7 +251,7 @@ class CreateAccount:
 
 class InterfaceBank:
 
-    def __init__(self, master, data_ops: DataOps, bank_account: BankAccount, account_creation: CreateAccount):
+    def __init__(self, master, data_ops, bank_account, account_creation):
         self.master = master
         self.master.title("A-Z TRAPEZA")
         self.data_ops = data_ops
@@ -253,7 +259,7 @@ class InterfaceBank:
         self.account_creation = account_creation
         self.customer = None
 
-        # Setting a consistent color scheme
+        # Setting a color scheme
         bg_color_window = "#4d3d08"
         bg_color = "#5d6134"
         accent_color = "#548ca8"
@@ -261,32 +267,37 @@ class InterfaceBank:
         tt_color = "#4d3d08"
         ff_color = "#ebc81a"
 
+        # Set a font scheme
+        font_style = ("monospace", 12)
+        font_label = ("Consolas", 10)
+
         # Master window background
         master.configure(bg=bg_color_window)
 
         # Labels for Customer info:
-        label_texts = ["Customer's Name:", "Account number:", "Amount:",
-                       "Customer ID(PIN):","Budget Category:", "Budget Limit:"]
-        self.label_widgets = [tk.Label(master, text=text) for text in label_texts]
-
+        label_texts = ["Account number:", "Amount:",
+                       "Customer ID(PIN):", "Budget Category:", "Budget Limit:", "Threshold:"]
+        self.label_widgets = [tk.Label(master, text=text, font=font_style) for text in label_texts]
 
         # Entry fields
-        entry_widgets = [tk.Entry(master) for _ in range(len(label_texts))]
-        self.entry_customer_name, self.entry_account_number, self.entry_amount, \
+        entry_widgets = [tk.Entry(master, font=font_style) for _ in range(len(label_texts))]
+        self.entry_account_number, self.entry_amount, \
             self.entry_customer_id, self.entry_budget_category, \
-            self.entry_budget_limit = entry_widgets
+            self.entry_budget_limit, self.entry_threshold, = entry_widgets
+
+        # Hide PIN entry field
+        self.entry_customer_id.config(show='*')
 
         # Buttons
-        button_texts = ["Deposit", "Withdraw", "Set Budget", "Create Account",
-                        "Transactions", "Spend Budget", "Set Threshold", "Select Customer", "Check Balance", "Calculate", "Clear Data", "Exit A-Z"]
+        button_texts = ["Deposit", "Withdraw", "Transactions", "Create Account",
+                        "Select Customer", "Set Budget", "Budget Limit","Spend Budget", "Check Balance", "Set Threshold", "Clear Data", "Calculate", "Budget Categories", "Exit A-Z"]
 
-        button_commands = [self.deposit_cash, self.withdraw_cash, self.set_budget,
-                           self.create_account_window, self.show_transactions, self.spend_budget,
-                           self.set_threshold, self.select_customer, self.check_balance, self.calculate, self.clear_data, self.on_closing]
+        button_commands = [self.deposit_money, self.withdraw_money, self.show_account_transactions,
+                           self.create_account_window, self.select_customer, self.set_budget, self.get_budget_category_limit,
+                           self.spend_budget, self.check_account_balance, self.set_threshold, self.clear_data, self.calculate, self.budget_categories_dict, self.on_closing]
 
-        self.button_widgets = [tk.Button(master, text=text, command=cmd, bg=accent_color, fg=ff_color)
+        self.button_widgets = [tk.Button(master, text=text, command=cmd, bg=accent_color, fg=ff_color, font=font_style)
                                for text, cmd in zip(button_texts, button_commands)]
-
 
         # Grid layout
         for i, label_widget in enumerate(self.label_widgets):
@@ -303,17 +314,18 @@ class InterfaceBank:
         for i, button_widget in enumerate(self.button_widgets[5:]):  # Remaining buttons
             button_widget.grid(row=i, column=4, columnspan=2, pady=10)
 
-
         # Notification panel
         self.notification_text = tk.Text(master, height=2, width=40)
         self.notification_text.grid(row=len(label_texts) + 2, column=0, columnspan=6, pady=20)
 
+        # Label to display threshold
+        self.label_threshold = tk.Label(master, text="Threshold: $0.0", font=font_label, bg=tt_color, fg=ff_color)
+        self.label_threshold.grid(row=len(label_texts), column=2, columnspan=2, pady=10)
+
+
         # Apply the background color to widgets
         for widget in self.label_widgets + self.button_widgets + [self.notification_text]:
             widget.configure(bg=tt_color, fg=ff_color)
-
-        #for widget in self.label_widgets + entry_widgets + self.button_widgets + [self.notification_text]:
-            #widget.configure(bg=tt_color)
 
 
 
@@ -327,35 +339,59 @@ class InterfaceBank:
 
         # Define labels and entries with a dictionary
         account_fields = {
-            "customer_name": {"label": "Customer Name", "entry": tk.Entry(account_window)},
-            "account_number": {"label": "Account Number:", "entry": tk.Entry(account_window)},
-            "account_holder": {"label": "Account Holder:", "entry": tk.Entry(account_window)},
-            "customer_id": {"label": "Customer ID:", "entry": tk.Entry(account_window)},
-            "default_balance": {"label": "Default Balance:", "entry": tk.Entry(account_window)},
+            "customer_name": {"label": "Customer Name:", "entry": ttk.Entry(account_window)},
+            "account_number": {"label": "Account Number:", "entry": ttk.Entry(account_window)},
+            "account_holder": {"label": "Account Holder:", "entry": ttk.Entry(account_window)},
+            "customer_id": {"label": "Customer ID:", "entry": ttk.Entry(account_window)},
+            "default_balance": {"label": "Default Balance:", "entry": ttk.Entry(account_window)},
         }
+
+        bg_color_window = "#4d3d08"
+        tt_color = "#4d3d08"
+        ff_color = "#ebc81a"
+
+        # Adding a style
+        style = ttk.Style()
+        style.configure('Accent.TLabel', font=('monospace', 10))
+        style.configure('Accent.TEntry', font=('monospace', 10), background=tt_color, foreground=ff_color)
+        style.configure('Accent.TButton', font=('monospace', 10), background=tt_color, foreground=tt_color)
+
+        # window background
+        account_window.configure(background=bg_color_window)
 
         # Add labels and entries to the grid layout
         row = 0
         for field_name, field_data in account_fields.items():
-            label = tk.Label(account_window, text=field_data["label"])
-            label.grid(row=row, column=0, padx=10, pady=10)
-            field_data["entry"].grid(row=row, column=1, padx=10, pady=10)
+            label = ttk.Label(account_window, text=field_data["label"], style='Accent.TLabel')
+            label.grid(row=row, column=0, padx=10, pady=10, sticky="e")
+            field_data["entry"].grid(row=row, column=1, padx=10, pady=10, sticky="w")
             row += 1
 
         # Add button to add the account
-        button_add_account = tk.Button(
-            account_window, text="Add Account", command=lambda: self.add_account(account_fields))
+        button_add_account = ttk.Button(
+            account_window, text="Create Account", command=lambda: self.add_account(account_fields), style='Accent.TButton')
         button_add_account.grid(row=row, column=0, columnspan=2, pady=10)
 
-    def calculate(self):
-        #Creating a window for the calculator pop up
+        # Apply the background color to widgets
+        for widget in [label, field_data["entry"], button_add_account]:
+            widget.configure(style='Accent.TEntry' if isinstance(widget, ttk.Entry) else 'Accent.TButton' if isinstance(widget, ttk.Button) else 'Accent.TLabel')
 
+
+    def calculate(self):
+        # Creating a window for the calculator pop up
         calc_window = tk.Toplevel(self.master)
         calc_window.title("Calculator")
 
-        #entry fields for the calculator input
-        entry_calc = tk.Entry(calc_window)
-        entry_calc.grid(row=0, column=0, columnspan=4)
+        # Setting a modern color scheme
+        tt_color = "#4d3d08"
+        ff_color = "#ebc81a"
+
+        # Configure the color scheme
+        calc_window.configure(bg=tt_color)
+
+        # Entry field for the calculator input
+        entry_calc = tk.Entry(calc_window, font=('Consolas', 12), justify='right', bd=10)
+        entry_calc.grid(row=0, column=0, columnspan=4, sticky='nsew')
 
         # Calculator buttons
         calc_buttons = [
@@ -363,47 +399,50 @@ class InterfaceBank:
             ('4', 2, 0), ('5', 2, 1), ('6', 2, 2), ('*', 2, 3),
             ('1', 3, 0), ('2', 3, 1), ('3', 3, 2), ('-', 3, 3),
             ('0', 4, 0), ('.', 4, 1), ('=', 4, 2), ('+', 4, 3),
-            ('DEL', 5, 0),
+            ('DEL', 5, 0), ('Exit', 5, 3),
 
         ]
 
-         # Create calculator buttons
+
+        # Create calculator buttons
         for (text, row, column) in calc_buttons:
-
             if text == 'DEL':
+                button = tk.Button(calc_window, text=text, command=lambda: entry_calc.delete(len(entry_calc.get()) - 1, tk.END), bg=tt_color, fg=ff_color, font=('Segoe UI', 10, 'bold'))
 
-                button = tk.Button(calc_window, text=text, command=lambda: entry_calc.delete(len(entry_calc.get()) - 1, tk.END))
+            elif text == 'Exit':
+                button = tk.Button(calc_window, text=text, command=calc_window.destroy, bg=tt_color, fg=ff_color, font=('Consolas', 10, 'bold'))
             else:
-
-                button = tk.Button(calc_window, text=text, command=lambda t=text: entry_calc.insert(tk.END, t))
+                button = tk.Button(calc_window, text=text, command=lambda t=text: entry_calc.insert(tk.END, t), bg=tt_color, fg=ff_color, font=('Segoe UI', 10, 'bold'))
             button.grid(row=row, column=column, sticky='nsew')
 
 
-        # Equal button action
-        def calculate():
-            expression = entry_calc.get()
-            try:
-                result = eval(expression)
-                entry_calc.delete(0, tk.END)
-                entry_calc.insert(tk.END, str(result))
-            except Exception as e:
-                entry_calc.delete(0, tk.END)
-                entry_calc.insert(tk.END, "Error")
-                entry_calc.delete(0, tk.END)
-
         # Create equal button separately
-        equal_button = tk.Button(calc_window, text='=', command=calculate)
+        equal_button = tk.Button(calc_window, text='=', command=lambda: self.evaluate_expression(entry_calc), bg=tt_color, fg=ff_color, font=('Segoe UI', 10, 'bold'))
         equal_button.grid(row=4, column=2, columnspan=1, sticky='nsew')
 
         # Configure grid layout
-        for i in range(5):
+        for i in range(6):
             calc_window.grid_rowconfigure(i, weight=1)
             calc_window.grid_columnconfigure(i, weight=1)
 
-        #Used the eval() function for simplicty but can as well as implement the Calculator class from Extras and express it using the logic below
+
+    def evaluate_expression(self, entry):
+        try:
+            expression = entry.get()
+            result = eval(expression)
+            entry.delete(0, tk.END)
+            entry.insert(tk.END, str(result))
+        except Exception as e:
+            entry.delete(0, tk.END)
+            entry.insert(tk.END, f"Error: {e}")
+            entry.delete(0, tk.END)
+
+
+
+    #Used the eval() function for simplicty reasons but can as well as implement the Calculator class from Extras module and express it using the logic below
 
     #method to perform evaluation logic
-    def evaluate_expression(expression, calculator):
+    def evaluate_expressionn(expression, calculator):
 
         # Split the expression into tokens (numbers and operators)
         tokens = expression.split()
@@ -471,9 +510,23 @@ class InterfaceBank:
         except ValueError:
             return "Invalid default balance format"
 
+        if len(customer_id) < 4:
+            self.display_notification("Customer ID(PIN) must have atleast four characters!")
+            messagebox.showerror("Error", "Customer ID(PIN) must have atleast four characters!")
+            return False
+
+        if len(account_number) < 5:
+            self.display_notification("Account number must have atleast five characters!")
+            messagebox.showerror("Error", "Account number must have atleast five characters!")
+            return False
+
+        if not isinstance(customer_name, str):
+            self.display_notification("Customer Name must be a string")
+            messagebox.showerror("Error", "Customer Name must be a string, Account Holder can have both intergers and strings")
+            return False
 
         # Validate input data
-        if not account_number or not account_holder or not customer_id or not default_balance:
+        if not account_number or not account_holder or not customer_id:
             self.display_notification("Fill in all required fields to proceed.")
             messagebox.showerror("Error", f"Fill in all required fields to proceed.")
             return
@@ -488,6 +541,7 @@ class InterfaceBank:
                     return
         """
         # Check for existing account with the same number
+        self.data_ops.load_data(filename="data_file.yaml")
         if any(account.account_number == account_number for customer in self.data_ops.bank_customers for account in customer.accounts):
             self.display_notification("Account with the same number already exists.")
             messagebox.showinfo("Account with same number exists")
@@ -515,7 +569,12 @@ class InterfaceBank:
             self.display_notification("Account created successfully.")
             messagebox.showinfo("Success", "Account created successfully.")
 
+
         except ValueError as e:
+            # Handle validation error
+            self.display_notification(f"Validation Error: {e}")
+            messagebox.showerror("Error", f"Validation Error: {e}")
+        except TypeError as e:
             # Handle validation error
             self.display_notification(f"Validation Error: {e}")
             messagebox.showerror("Error", f"Validation Error: {e}")
@@ -532,7 +591,7 @@ class InterfaceBank:
             messagebox.showerror("Error", f"Error creating account: {e}")
 
 
-        # Method to display notifications
+    # Method to display notifications
     def display_notification(self, message):
         self.notification_text.config(state=tk.NORMAL) #Enable the widget to be edited
         self.notification_text.insert(tk.END, f"{message}\n") #insert message
@@ -540,11 +599,24 @@ class InterfaceBank:
         self.notification_text.see(tk.END)
 
 
+    #Method to update the GUI after successful threshold set
+    def update_gui(self):
+        if self.data_ops.selected_customer:
+
+            # Display threshold or initialize to $0.0 if not set
+            threshold_text = f"Threshold: ${self.data_ops.selected_customer.threshold:.2f}" if hasattr(self.data_ops.selected_customer, 'threshold') else "Threshold: $0.0"
+            self.label_threshold.config(text=threshold_text)
+        else:
+            # Handle no customer selected case
+            self.display_notification("No customer selected")
+
+
     def setup_data_ops(self, filename: str):
         data_ops = DataOps(filename, [])
         # Load data when the app opens
         data_ops.load_data(filename)
-        return data_ops
+        return True
+
 
     def load_customer_data(self, account_number: str | None = None):
         """
@@ -580,8 +652,9 @@ class InterfaceBank:
             print(f"Loaded data for all customers.")
             return self.data_ops.bank_customers  # Return all customers if no account number is provided
 
-    def select_customer(self):
 
+
+    def select_customer(self):
         try:
             account_number = self.entry_account_number.get()
 
@@ -592,8 +665,8 @@ class InterfaceBank:
                 selection_succesful = self.data_ops.select_customer_by_account_number(account_number)
 
                 if selection_succesful:
-                    messagebox.showinfo("Success", f"Customer with account number {account_number} has been successfully selected")
-                    self.display_notification(F"Success ,Customer with account number {account_number} has been successfully selected")
+                    messagebox.showinfo("Success", f"Customer with account number {self.data_ops.selected_customer.account_number} has been successfully selected")
+                    self.display_notification(F"Success ,Customer with account number {self.data_ops.selected_customer.account_number} has been successfully selected")
                 else:
                     self.display_notification("Something went wrong while Selecting Account. Default Account selected")
                     messagebox.showerror("Error", f"Account selection failed. Default Account selected!")
@@ -607,7 +680,7 @@ class InterfaceBank:
             self.display_notification(f"Error: account selection failed. {e}")
 
 
-    def withdraw_cash(self):
+    def withdraw_money(self):
         try:
             amount = float(self.entry_amount.get())
             customer_id = self.entry_customer_id.get()
@@ -620,29 +693,38 @@ class InterfaceBank:
                 raise ValueError("Please enter a valid amount.")
                 messagebox.showerror("Error", f"Please enter a valid amount to proceed!" )
 
+            if customer_id != self.data_ops.selected_customer.customer_id:
+                raise WrongCustomerIdError("You entered a wrong PIN.")
+
+            if not self.data_ops.selected_customer:
+                raise NoCustomerSelectedError("Please select a customer first")
+
             if self.data_ops.selected_customer:
-                withdraw_successful = self.data_ops.selected_customer.withdraw(amount, customer_id)
+                withdraw_successful = self.data_ops.selected_customer.withdraw_money(amount, customer_id)
 
                 if withdraw_successful:
                     self.display_notification(f"Success: Withdrawal of {amount} was successful")
                     messagebox.showinfo("Success", f"Withdrawal of {amount} was successful")
-                    self.update_gui()
-
                 else:
-                    self.display_notification("Error: Withdrawal failed.")
+                    self.display_notification("Withdrawal failed.")
                     messagebox.showerror("Error", f"Withdrawal of {amount} was unsuccessful!")
-                    # Clear input fields
-                    # self.entry_amount.delete(0, tk.END)
-                    # self.entry_customer_id.delete(0, tk.END)
+                # Clear input fields
+                self.entry_amount.delete(0, tk.END)
+                self. entry_customer_id.delete(0, tk.END)
             else:
-                self.display_notification("No customer selected.")
+                self.display_notification("No customer found.")
+
         except ValueError:
             self.display_notification("Error: Invalid amount entered.")
+        except WrongCustomerIdError as e:
+            self.display_notification(f"Error: {e}")
+        except NoCustomerSelectedError as e:
+            self.display_notification(f"Error: {e})")
         except Exception as e:
             self.display_notification(f"Error: Withdrawal failed. {e}")
 
 
-    def deposit_cash(self):
+    def deposit_money(self):
         try:
             amount = float(self.entry_amount.get())
             customer_id = self.entry_customer_id.get()
@@ -651,31 +733,43 @@ class InterfaceBank:
                 raise ValueError("Please enter a valid customer ID.")
 
             if not amount:
-                raise ValueError("Please enter a valid amount.")
+                raise InvalidDepositAmountError("Please enter a valid amount.")
+
+            if customer_id != self.data_ops.selected_customer.customer_id:
+                raise WrongCustomerIdError("You entered a wrong PIN.")
+
+            if not self.data_ops.selected_customer:
+                raise NoCustomerSelectedError("Please select a customer first")
 
             if self.data_ops.selected_customer:
-                deposit_succesful = self.data_ops.selected_customer.deposit(amount, customer_id)
+                deposit_succesful = self.data_ops.selected_customer.deposit_money(amount, customer_id)
+
                 if deposit_succesful:
-                    self.display_notification(f"Success: Deposit of {amount} was successful")
-                    messagebox.showinfo("Success", f"Deposit of {amount} was successful")
-                    self.update_gui()
+                    self.display_notification(f"Success: Deposit of ${amount} was successful")
                 else:
-                    self.display_notification("Error: Deposit failed")
+                    self.display_notification("Deposit failed")
                     messagebox.showerror("Error", f"Deposit of {amount} was unsuccessful")
-                    # Clear input fields
-                    self.entry_amount.delete(0, tk.END)
-                    self.entry_customer_id.delete(0, tk.END)
+
+                # Clear input fields
+                self.entry_amount.delete(0, tk.END)
+                self.entry_customer_id.delete(0, tk.END)
             else:
                 self.display_notification("No customer found")
 
         except ValueError as e:
             self.display_notification(f"Error: Invalid amount entered {e}")
+        except WrongCustomerIdError as e:
+            self.display_notification(f"Error: {e}")
+        except NoCustomerSelectedError as e:
+            self.display_notification(f"Error: {e})")
+        except InvalidDepositAmountError as e:
+            self.display_notification(f"Error: {e})")
         except Exception as e:
             self.display_notification(f"Error: Deposit failed. {e}")
             print(f"Error, deposit failed {e}")
 
 
-    def check_balance(self):
+    def check_account_balance(self):
         try:
             customer_id = self.entry_customer_id.get()
             account_number = self.entry_account_number.get()
@@ -687,17 +781,35 @@ class InterfaceBank:
                 raise ValueError("Please enter a valid account_number.")
 
             if not self.data_ops.selected_customer:
-                raise ValueError("Please select a customer first.")
+                raise NoCustomerSelectedError("Please select a customer first")
 
-            self.data_ops.selected_customer.check_balance(customer_id, account_number)
-            messagebox.showinfo("Account Balance", f"Dear {self.selected_customer.customer_name} your acount balance is ${self.selected_customer.default_balance}.")
-            self.update_gui()
+            if customer_id != self.data_ops.selected_customer.customer_id:
+                raise WrongCustomerIdError("You entered a wrong PIN")
+
+            if account_number != self.data_ops.selected_customer.account_number:
+                raise InvalidAccountNumberError("Error. You entered an invalid account number")
+
+            # Retrieve and display balance
+            current_balance = self.data_ops.selected_customer.account_balance
+            messagebox.showinfo("Account Balance", f"Your current account balance is ${current_balance}.")
+            self.display_notification(f"Your current account balance is ${current_balance}.")
+            return current_balance
+
+            self. entry_customer_id.delete(0, tk.END)
+
         except ValueError:
             self.display_notification("Error: Invalid input. Please try again.")
+        except WrongCustomerIdError as e:
+            self.display_notification(f"Error: {e}")
+        except InvalidAccountNumberError as e:
+            self.display_notification(f"Error: {e}")
+        except NoCustomerSelectedError as e:
+            self.display_notification(f"Error: {e})")
         except Exception as e:
             self.display_notification(f"Error: Check balance failed. {e}")
 
-    def show_transactions(self):
+
+    def show_account_transactions(self):
         try:
             customer_id = self.entry_customer_id.get()
             account_number = self.entry_account_number.get()
@@ -709,17 +821,46 @@ class InterfaceBank:
                 raise ValueError("Please enter a valid account_number amount.")
 
             if not self.data_ops.selected_customer:
-                raise ValueError("Please select a customer first.")
-            self.data_ops.selected_customer.transactions(customer_id, account_number)
+                raise NoCustomerSelectedError("Please select a customer first")
+
+            if customer_id != self.data_ops.selected_customer.customer_id:
+                raise WrongCustomerIDError ("You entered a wrong PIN")
+
+            if account_number != self.data_ops.selected_customer.account_number:
+                raise InvalidAccountNumberError("You entered an invalid account number")
+
+            #Retrive transacton history
+            transactions =  self.data_ops.selected_customer.account_transactions(customer_id, account_number)
+            if transactions:
+                formatted_transactions = "\n".join(str(transaction) for transaction in transactions)
+                messagebox.showinfo("Transactions", f"{self.data_ops.selected_customer.account_holder}'s transaction history:\n{formatted_transactions}")
+
+                return formatted_transactions
+            else:
+                # Handles the case where there are no transactions
+                messagebox.showinfo("Transactions", f"{self.data_ops.selected_customer.account_holder}'s transaction history is empty.")
+                return ""
+
         except ValueError as e:
             self.display_notification(f"Error: Invalid input for transactions: {e}")
+        except InvalidAccountNumberError as e:
+            self.display_notification(f"Error: {e}")
+        except WrongCustomerIdError as e:
+            self.display_notification(f"Error: {e}")
+        except NoCustomerSelectedError as e:
+            self.display_notification(f"Error: {e})")
         except TypeError as e:
             self.display_notification(f"Error: {e}")
+        except Exception as e:
+            messagebox.showerror("Error", e.message)
+            return {}
+
 
     def set_budget(self):
         try:
             customer_id = self.entry_customer_id.get()
-            limit = self.entry_budget_limit.get()
+            limit = float(self.entry_budget_limit.get())
+            category = self.entry_budget_category.get()
 
             if not customer_id:
                 raise ValueError("Please enter a valid customer ID.")
@@ -728,53 +869,225 @@ class InterfaceBank:
                 raise ValueError("Please enter a valid limit amount.")
 
             if not self.data_ops.selected_customer:
-                raise ValueError("Please select a customer before setting budget.")
+                raise NoCustomerSelectedError ("Please select a customer before setting budget.")
 
-            self.data_ops.selected_customer.set_budget(limit, customer_id)
+            if customer_id != self.data_ops.selected_customer.customer_id:
+                raise WrongCustomerIdError("You entered a wrong PIN")
+
+            if not category:
+                self.display_notification("Error: Please select a category to proceed")
+                messagebox.showerror("Error", "Please select a category to proceed")
+                return
+
+            selected_customer = self.data_ops.selected_customer
+            if selected_customer:
+                if limit > self.data_ops.selected_customer.account_balance:
+                    raise InsufficientFundsError("Insufficient funds to proceed, budget limit cannot exceed current account balance.")
+
+            if category in self.data_ops.selected_customer.budget_categories:
+                raise BudgetCategoryAlreadyExistsError(f"Budget category '{category}' already has a limit set.")
+
+            self.data_ops.selected_customer.budget_categories[category] = {"category": category, "limit": limit}
+
+            messagebox.showinfo("Success", f"Dear customer, a budget category of {category} with a limit of ${limit} was successfully added to your budget categories. Thank you for keeping it A-Z!")
+            return True
 
         except ValueError as e:
             self.display_notification(f"Error: Invalid input for set budget: {e}")
         except TypeError as e:
             self.display_notification(f"Error: {e}")
+        except WrongCustomerIdError as e:
+            self.display_notification(f"Error: {e}")
+        except NoCustomerSelectedError as e:
+            self.display_notification(f"Error: {e})")
+        except InsufficientFundsError as e:
+            self.display_notification(f"Error: {e}")
+        except BudgetCategoryAlreadyExistsError as e:
+            self.display_notification(f"Error: {e}")
+
+
+    def budget_categories_dict(self):
+        customer_id = self.entry_customer_id.get()
+
+        try:
+            if not isinstance(customer_id, str):
+                raise TypeError("Customer ID must be a string.")
+
+            if not customer_id:
+                raise InvalidCustomerIDError("Invalid Customer ID")
+
+            if not self.data_ops.selected_customer:
+                raise NoCustomerSelectedError("Please select a customer first")
+
+            if customer_id != self.data_ops.selected_customer.customer_id:
+                raise WrongCustomerIdError("You entered the wrong Customer ID(PIN)")
+
+            #Retrive budget categories dict
+            results = self.data_ops.selected_customer.budget_categories
+            if results:
+                formatted_results = "\n".join(f"{category}: ${limit}" for category, limit in results.items())
+                messagebox.showinfo("Budget Categories", f"{self.data_ops.selected_customer.account_holder}'s Budget Categories:\n{formatted_results}")
+                return formatted_results
+
+            else:
+                # Handles the case where there are no Budget Categories
+                messagebox.showinfo("Budget Categories", f"{self.data_ops.selected_customer.account_holder} has not yet set any Budget Categories.")
+                return ""
+
+        except TypeError as e:
+            self.display_notification(f"Error: {e}")
+        except WrongCustomerIdError as e:
+            self.display_notification(f"Error: {e}")
+        except InvalidCustomerIDError as e:
+            self.display_notification(f"Error: {e}")
+        except NoCustomerSelectedError as e:
+            self.display_notification(f"Error: {e})")
+        except Exception as e:
+            messagebox.showerror("Error",e)
+            return {}
+
+
+    def get_budget_category_limit(self):
+        customer_id = self.entry_customer_id.get()
+        category = self.entry_budget_category.get()
+
+        try:
+            if not isinstance(customer_id, str):
+                raise TypeError("Invalid customer ID")
+
+            if not category:
+                self.display_notification("Please enter a valid category name")
+                return
+
+            if not self.data_ops.selected_customer:
+                raise NoCustomerSelectedError ("Please select a customer to proceed.")
+
+            if category not in self.data_ops.selected_customer.budget_categories:
+                raise BudgetCategoryNotFoundError(f"Budget category '{category}' not found.")
+
+            if customer_id != self.data_ops.selected_customer.customer_id:
+                raise WrongCustomerIdError("You entered the wrong Customer ID(PIN)")
+
+            budget_limit_success = self.data_ops.selected_customer.get_budget_category_limit(category, customer_id)
+            if budget_limit_success is not None:
+                messagebox.showinfo("Success", f"Dear {self.data_ops.selected_customer.account_holder}, your set up for budget: {category} is: {budget_limit_success}")
+                self.display_notification(f"Dear {self.data_ops.selected_customer.account_holder}, your current setup for budget: {category} is: {budget_limit_success}")
+            else:
+                self.display_notification(f"{self.data_ops.selected_customer.account_holder} has no budget Category set")
+
+        except TypeError as e:
+            self.display_notification(f"Error: {e})")
+        except InvalidCustomerIDError as e:
+            self.display_notification(f"Error: {e})")
+        except WrongCustomerIdError as e:
+            self.display_notification(f"Error: {e})")
+        except BudgetCategoryNotFoundError as e:
+            self.display_notification(f"Error: {e})")
+        except NoCustomerSelectedError as e:
+            self.display_notification(f"Error: {e})")
+        except Exception as e:
+            self.display_notification(f"Error: {e})")
+            return {}
 
 
     def spend_budget(self):
-        pass
+        customer_id = self.entry_customer_id.get()
+        category = self.entry_budget_category.get()
+        amount = self.entry_amount.get()
+
+        try:
+            if not customer_id:
+                raise ValueError("Please enter a valid customer ID.")
+
+            if not amount:
+                raise ValueError("Please enter a valid amount to spend.")
+
+            if not self.data_ops.selected_customer:
+                raise NoCustomerSelectedError ("Please select a to proceed.")
+
+            if customer_id != self.data_ops.selected_customer.customer_id:
+                raise WrongCustomerIdError("Invalid customer_id")
+
+            if not category:
+                self.display_notification("Please select a category to proceed")
+                messagebox.showerror("Error", "Please select a category to proceed")
+                return False
+
+            expense_success = self.data_ops.selected_customer.spend_from_budget(category, amount, customer_id)
+
+            if expense_success:
+                self.display_notification(f"Expense of ${amount} from category {category} was successful. Your new balance is ${self.data_ops.selected_customer.account_balance}.")
+                return expense_success
+            else:
+                self.display_notification(f"Expense of ${amount} from category {category} was unsuccessful. Your budget limit for {category} is ${self.data_ops.selected_customer.budget_categories.get(category, 0)}.")
+                return False
+
+        except ValueError as e:
+            self.display_notification(f"Error: {e})")
+        except TypeError:
+            self.display_notification(f"Error: something unexpected happended, Please try again later!")
+        except WrongCustomerIdError as e:
+            self.display_notification(f"Error: {e})")
+        except NoCustomerSelectedError as e:
+            self.display_notification(f"Error: {e})")
+        except Exception:
+            self.display_notification(f"Error: something unexpected happended, Please try again later!")
+            return False
 
 
     def set_threshold(self):
         try:
             customer_id = self.entry_customer_id.get()
-            threshold = self.entry_set_threshold.get()
+            threshold = self.entry_threshold.get()
+            account_number = self.entry_account_number.get()
+
+            if not account_number:
+                raise ValueError("Please enter a valid account_number.")
 
             if not customer_id:
-                raise ValueError("Please enter a valid customer ID.")
+                raise InvalidCustomerIDError("Please enter a valid customer ID.")
 
             if not threshold:
-                raise ValueError("Please enter a valid threshold amount.")
+                raise InvalidThresholdAmountError("Please enter a valid threshold amount.")
+
+            if account_number != self.data_ops.selected_customer.account_number:
+                raise InvalidAccountNumberError("You entered an invalid account number")
 
             if not self.data_ops.selected_customer:
-                raise ValueError("Please select a customer before setting a threshold.")
+                raise NoCustomerSelectedError("Please select a customer before setting a threshold.")
 
-            self.data_ops.selected_customer.set_threshold(threshold, customer_id)
-            self.display_notification(f"Threshold successfully set for customer {customer_id}.")
+            if customer_id != self.data_ops.selected_customer.customer_id:
+                raise WrongCustomerIdError("You entered a wrong pin")
+
+
+            if self.data_ops.selected_customer.threshold:
+                # Prompt user for confirmation
+                confirmation = messagebox.askokcancel("Threshold Reset", f"Dear {self.data_ops.selected_customer.account_holder} you already have a threshold of ${self.data_ops.selected_customer.threshold} set for account number {self.data_ops.selected_customer.account_number}. Are you sure you want to continue?")
+
+                if not confirmation:
+                    self.display_notification("Thank you for keeping it A-Z")
+                    return False
+
+            self.data_ops.selected_customer.set_account_threshold(threshold, customer_id)
+            self.display_notification(f"A threshold  of {threshold} has successfully been set for account: {self.data_ops.selected_customer.account_number}, account holder: {self.data_ops.selected_customer.account_holder}.")
+            self.update_gui()
+
         except ValueError as e:
-            self.display_notification(f"Error setting threshold: {e}")
+            self.display_notification(f"Error: {e}")
         except TypeError as e:
-            self.display_notification(f"Unexpected error occurred: {e}")
-
-
-    def update_gui(self):
-        if self.data_ops.selected_customer:
-            label_customer_name.config(text=f"Customer's Name:{self.data_ops.selected_customer.customer_name}")
-            label_customer_id.config(text=f"Customer's Name: {self.data_ops.selected_customer.customer_id}")
-
-            # Loop through selected customer's accounts
-            for account in self.selected_customer.accounts:
-                interface.label_balance.config(text=f"Current Balance: ${self.data_ops.selected_customer.account_balance:.2f}")
-        else:
-            # Handle no customer selected case
-            self.display_notification("No customer selected")
+            self.display_notification(f"Error: {e}")
+        except InvalidCustomerIDError as e:
+            self.display_notification(f"Error: {e})")
+        except InvalidAccountNumberError as e:
+            self.display_notification(f"Error: {e})")
+        except WrongCustomerIdError as e:
+            self.display_notification(f"Error: {e})")
+        except InvalidThresholdAmountError as e:
+            self.display_notification(f"Error: {e})")
+        except NoCustomerSelectedError as e:
+            self.display_notification(f"Error: {e})")
+        except Exception as e:
+            self.display_notification(f"Error: {e}")
 
 
     def clear_data(self):
@@ -782,267 +1095,43 @@ class InterfaceBank:
             customer_id = self.entry_customer_id.get()
 
             if not customer_id:
-                raise ValueError("Please enter a valid customer ID.")
+                raise InvalidCustomerIDError ("Please enter a valid customer ID.")
 
             if not self.data_ops.selected_customer:
-                raise ValueError("Please select a customer first.")
+                raise NoCustomerSelectedError ("Please select a customer first.")
+
+            if customer_id != self.data_ops.selected_customer.customer_id:
+                raise WrongCustomerIdError ("You entered a wrong PIN")
 
             # Prompt user for confirmation
             confirmation = messagebox.askokcancel("Clear Account Data", "Are you sure you want to clear all account data? This action is permanent and cannot be undone.")
 
             if not confirmation:
-                return
+                return False
 
-            if confirmation:
-                self.data_ops.selected_customer.clear_data(customer_id)
-                self.display_notification("Contents of the data file have been successfully removed")
-                messagebox.showinfo("Contents of the data file have been successfully removed")
+            self.data_ops.selected_customer.clear_data(customer_id)
+            self.display_notification("Contents of the data file have been successfully removed")
+            messagebox.showinfo("Succes", "Contents of the data file have been successfully removed")
 
         except TypeError as e:
             messagebox.showerror("Error", e)
         except ValueError as e:
             messagebox.showerror("Error", e)
+        except InvalidThresholdAmountError as e:
+            self.display_notification(f"Error: {e})")
+        except NoCustomerSelectedError as e:
+            self.display_notification(f"Error: {e})")
+        except WrongCustomerIdError as e:
+            self.display_notification(f"Error: {e})")
         except Exception as e:
-            messagebox.showerror("Error", e)
+            self.display_notification("Error", e)
 
 
     # save the account data when the application is closed
     def on_closing(self):
-        #self.data_ops.save_data()
+        #self.data_ops.save_data(filename="data_file.yaml", account_data=self.data_ops.selected_customer)
         self.master.destroy()
 
-
-
-
-class AccountTransactions(BankAccount):
-    """
-       Responsible for encapsulating the logic for account transactions. It inherits from the BankAccount class in the Alpha module.
-
-      Attributes:
-                data_ops (DataOps): Object providing data access operations.
-                interface (InterfaceBank): Object responsible for interface updates.
-
-    Methods:
-        withdraw(amount, customer_id): Allows a withdrawal from the current account, raising exceptions for insufficient funds, invalid amounts, or incorrect customer ID.
-        deposit(amount, customer_id): Allows a deposit to the current account, raising exceptions for invalid amounts or incorrect customer ID.
-        check_balance(customer_id, account_number): Verifies the account number and customer ID before retrieving and displaying the current account balance.
-        transactions(customer_id, account_number): Retrieves and displays the transaction history for the specified customer account.
-    """
-
-    def __init__(self, account_number, account_holder, customer_id, default_balance, data_ops: DataOps, interface: InterfaceBank):
-        super().__init__(account_number, account_holder, customer_id, default_balance)
-        self.data_ops = data_ops
-        self.interface = interface
-
-
-    def withdraw(self, amount, customer_id):
-        """
-        Performs a withdrawal from the current account, raising exceptions for various error conditions.
-
-        Args:
-            amount (float): The amount to withdraw.
-            customer_id (str): The customer ID associated with the account.
-
-        Returns:
-            boolean: True if the withdrawal is successful, False otherwise.
-
-        Raises:
-            ValueError: If the amount is not a valid number.
-            TypeError: If the customer ID is not a string.
-            InsufficientFundsError: If the account balance is insufficient for the withdrawal.
-            InvalidWithdrawalAmountError: If the withdrawal amount is less than $1.
-            InvalidCustomerIDError: If the provided customer ID does not match the current customer.
-        """
-
-        try:
-            amount = float(amount)
-
-            if not isinstance(customer_id, str):
-                raise TypeError("Customer ID must be a string.")
-
-            if amount > self.data_ops.selected_customer.account_balance:
-                raise InsufficientFundsError("Insufficient funds to proceed to withdrawal.")
-
-            if amount < 1:
-                raise InvalidWithrawalAmountError("Invalid withdrawal amount. Please enter a valid number.")
-
-            if customer_id != self.data_ops.selected_customer.customer_id:
-                raise InvalidCustomerIDError("Invalid customer ID.")
-
-            self.account_balance -= amount
-            self.transaction_history.append({"Type of transaction": "withdrawal", "Amount withdrawn": amount})
-            self.interface.display_notification(f"{amount} was successfully withdrawn")
-            messagebox.showinfo("Success", f"Withdrawal of ${amount} was successful. Your new account balance is {self.account_balance}")
-            return True
-
-        except ValueError:
-            messagebox.showerror("Error", "Invalid withdrawal amount. Please enter a valid number.")
-            return False
-        except TypeError as e:
-            messagebox.showerror("Error", str(e))
-            return False
-        except InsufficientFundsError as e:
-            messagebox.showerror("Error", e.message)
-            print("Insufficient funds to proceed to withdrawal")
-            return False
-        except InvalidCustomerIDError as e:
-            messagebox.showerror("Error", e.message)
-            return False
-        except InvalidWithrawalAmountError as e:
-            messagebox.showerror("Error", e.message)
-            return False
-
-    def deposit(self, amount, customer_id):
-        """
-        Deposits funds to the current account, raising exceptions for various error conditions.
-
-        Args:
-            amount (float): The amount to deposit.
-            customer_id (str): The customer ID associated with the account.
-
-        Returns:
-            boolean: True if the deposit is successful, False otherwise.
-
-        Raises:
-            ValueError: If the amount is not a valid number.
-            TypeError: If the customer ID is not a string.
-            InvalidDepositAmountError: If the deposit amount is less than 1.
-            InvalidCustomerIDError: If the provided customer ID does not match the current customer.
-        """
-        try:
-            amount = float(amount)
-            if not isinstance(customer_id, str):
-                raise TypeError("Customer ID must be a string.")
-
-            if amount < 1:
-                raise InvalidDepositAmountError(f"Minimum deposit amount is ${1}.")
-
-            if customer_id != self.data_ops.selected_customer.customer_id:
-                raise InvalidCustomerIDError("Invalid customer ID.")
-
-
-            self.account_balance += amount
-            self.transaction_history.append({"Type of transaction": "deposit", "Amount withdrawn": amount})
-            self.interface.display_notification(f"Withdrawal of {amount} was successful")
-            messagebox.showinfo("Success", f"Deposit of ${amount} was successful. Your new account balance is ${self.account_balance}")
-            return True
-        except ValueError:
-            messagebox.showerror("Error", "Invalid deposit amount. Please enter a valid number.")
-            return False
-        except TypeError as e:
-            messagebox.showerror("Error", e)
-            return False
-        except InvalidDepositAmountError as e:
-            messagebox.showerror("Error", e.message)
-            return False
-        except InvalidCustomerIDError as e:
-            messagebox.showerror("Error", e.message)
-            return False
-
-    def check_balance(self, customer_id, account_number):
-
-        """
-        Verifies the account number and customer ID before retrieving and displaying the current account balance.
-
-        Args:
-            customer_id (str): The customer ID associated with the account.
-            account_number (str): The account number to verify.
-
-        Returns:
-            boolean: True if the balance retrieval is successful, False otherwise.
-
-        Raises:
-            ValueError: If any input is invalid.
-            TypeError: If the customer ID or account number is not a string.
-            InvalidCustomerIDError: If the provided customer ID does not match the current customer.
-            InvalidAccountNumberError: If the provided account number does not match the current account.
-        """
-        try:
-            if not isinstance(account_number, str):
-                raise TypeError("Customer account number must be a string.")
-
-            if not isinstance(customer_id, str):
-                raise TypeError("Customer ID must be a string.")
-
-            if customer_id != self.data_ops.selected_customer.customer_id:
-                raise InvalidCustomerIDError("Error. You entered a wrong PIN")
-
-            if account_number != self.data_ops.selected_customer.account_number:
-                raise InvalidAccountNumberError(f"Error. You entered an invalid account number")
-
-            # Retrieve and display balance
-            current_balance = self.data_ops.selected_customer.account_balance
-            self.interface.display_notification(f"Your current account balance is ${current_balance}.")
-            messagebox.showinfo(f"Your current account balance is ${current_balance}.")
-            return True
-
-        except ValueError:
-            messagebox.showerror("Error", "Invalid input. Please try again.")
-            return False
-        except TypeError as e:
-            messagebox.showerror("Error", str(e))
-            return False
-        except InvalidCustomerIDError as e:
-            messagebox.showerror("Error", e.message)
-            return False
-        except InvalidAccountNumberError as e:
-            messagebox.showerror("Error", e.message)
-            return False
-
-    def transactions(self, customer_id, account_number):
-        """
-        Retrieves and displays the transaction history for the specified customer account.
-
-        Args:
-            customer_id (str): The customer ID associated with the account.
-            account_number (str): The account number to verify.
-
-        Returns:
-            formatted_transactions
-
-        Raises:
-            ValueError: If any input is invalid.
-            TypeError: If the customer ID or account number is not a string.
-            InvalidCustomerIDError: If the provided customer ID does not match the current customer.
-            InvalidAccountNumberError: If the provided account number does not match the current account.
-            Exception: Any other unexpected exception encountered.
-        """
-        try:
-            if not isinstance(account_number, str):
-                raise TypeError("Customer account number must be a string.")
-
-            if not isinstance(customer_id, str):
-                raise TypeError("Customer ID must be a string.")
-
-            if customer_id != self.data_ops.selected_customer.customer_id:
-                raise InvalidCustomerIDError("Error. You entered a wrong PIN")
-
-            if account_number != self.data_ops.selected_customer.account_number:
-                raise InvalidAccountNumberError(f"Error. You entered an invalid account number")
-
-            transactions =  self.data_ops.selected_customer.get_transaction_history()
-            if transactions:
-
-                formatted_transactions = "\n".join(str(transaction) for transaction in transactions)
-                messagebox.showinfo("Transactions", f"{self.data_ops.selected_customer.account_holder}'s transaction history:\n{formatted_transactions}")
-                return formatted_transactions
-
-            else:
-                # Handle the case where there are no transactions
-                messagebox.showinfo("Transactions", f"{self.data_ops.selected_customer.account_holder}'s transaction history is empty.")
-                return ""
-
-        # Handle specific exceptions with custom messages
-        except ValueError as e:
-            messagebox.showerror("Error", f"Invalid input for transaction history: {e}")
-        except TypeError as e:
-            messagebox.showerror("Error", str(e))
-        except InvalidCustomerIDError as e:
-            messagebox.showerror("Error", e.message)
-        except InvalidAccountNumberError as e:
-            messagebox.showerror(f"Error", e.message)
-        except Exception as e:
-            messagebox.showerror(f"Error", {e})
 
 class BudgetActions:
     def __init__(self, data_ops: DataOps, bank_account: BankAccount ):
@@ -1291,7 +1380,7 @@ class BudgetActions:
                 raise TypeError ("Customer ID must be a string.")
 
             if threshold < 1:
-                raise InvalidThresholdError (f"Threshold must be more than a ${1}")
+                raise InvalidThresholdAmountError (f"Threshold must be more than a ${1}")
 
             if threshold > self.data_ops.selected_customer.account_balance:
                 raise InsufficientFundsError(f"Threshold cannot be more than current account balance")
@@ -1311,7 +1400,7 @@ class BudgetActions:
         except InvalidCustomerIDError as e:
             messagebox.showerror("Error", e.message)
             raise
-        except InvalidThresholdError as e:
+        except InvalidThresholdAmountError as e:
             messagebox.showerror("Error", e.message)
             raise
         except InsufficientFundsError as e:
@@ -1323,6 +1412,7 @@ class BudgetActions:
 
 
 class Extras:
+
     def __init__(self, data_ops: DataOps, bank_account: BankAccount ):
 
         self.data_ops = data_ops
@@ -1337,7 +1427,7 @@ class Extras:
             if customer_id != self.data_ops.selected_customer.customer_id:
                 raise WrongCustomerIdError ("Cannot proceed to clear account data, You entered the wrong pin")
 
-             # Open the file in write mode and write an empty JSON object
+             # Open the file in write mode and write an empty YAML object
             with open("data_file.yaml", "w") as file:
                 yaml.dump({}, file)
             messagebox.showinfo("The contents of the file have been deleted.")
@@ -1353,23 +1443,19 @@ class Extras:
 
 
 
-
-
-
-
-
-
+"""
 if __name__ == '__main__':
     test_loader = unittest.TestLoader()
     test_suite = test_loader.discover('tests', pattern='*.py')
     unittest.TextTestRunner().run(test_suite)
+"""
+
 
 
 root = tk.Tk()
 
 data_ops = DataOps(filename="data_file.yaml", bank_customers=[])
 
-#bank_account =  BankAccount(account_number="", account_holder="", customer_id="", default_balance=0)
 
 app = InterfaceBank(root, data_ops, CreateAccount, BankAccount)
 

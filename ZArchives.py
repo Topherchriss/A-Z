@@ -9,6 +9,7 @@ from json_utils import save_bank_account_data, load_bank_account_data, save_bank
 
 class BankInterface:
     """
+    """
     A graphical user interface for the A-Z TRAPEZA banking system.
 
     Methods:
@@ -56,6 +57,7 @@ class BankInterface:
 
         on_closing(self) -> None:
             Save the account data before closing the application.
+    """
 
 
     """
@@ -67,7 +69,7 @@ class BankInterface:
         Initialize the BankInterface.
 
         Parameters:
-            master (tk.Tk): The master tkinter window.
+       #     master (tk.Tk): The master tkinter window.
         """
 
         self.master = master
@@ -1063,3 +1065,450 @@ class InterfaceBank:
         self.notification_text = tk.Text(master, height=2, width=40)
         self.notification_text.grid(row=15, column=0, columnspan=2, pady=20)
 """
+"""
+class InterfaceBank:
+
+    def __init__(self, master, data_ops: DataOps, account_trans: AccountTransaction, account_creation: CreateAccount):
+        self.master = master
+        self.master.title("A-Z TRAPEZA")
+        self.data_ops = data_ops
+        self.account_trans = account_trans
+        self.account_creation = account_creation
+        self.customer = None
+
+        # Setting a consistent color scheme
+        bg_color_window = "#4d3d08"
+        bg_color = "#5d6134"
+        accent_color = "#548ca8"
+        highlight_color = "#D8BFD8"
+        tt_color = "#4d3d08"
+        ff_color = "#ebc81a"
+
+        # Master window background
+        master.configure(bg=bg_color_window)
+
+        # Labels for Customer info:
+        label_texts = ["Customer's Name:", "Account number:", "Amount:",
+                       "Customer ID(PIN):","Budget Category:", "Budget Limit:"]
+        self.label_widgets = [tk.Label(master, text=text) for text in label_texts]
+
+        # Entry fields
+        entry_widgets = [tk.Entry(master) for _ in range(len(label_texts))]
+        self.entry_customer_name, self.entry_account_number, self.entry_amount, \
+            self.entry_customer_id, self.entry_budget_category, \
+            self.entry_budget_limit = entry_widgets
+
+        # Buttons
+        button_texts = ["Deposit", "Withdraw", "Set Budget", "Create Account",
+                        "Transactions", "Spend Budget", "Set Threshold", "Select Customer", "Check Balance", "Calculate", "Clear Data", "Exit A-Z"]
+
+        button_commands = [
+            self.deposit_money,
+            self.withdraw_money,
+            self.set_budget,
+            self.create_account_window,
+            self.show_account_transactions,
+            self.spend_budget,
+            self.set_threshold,
+            self.select_customer,
+            self.check_account_balance,
+            self.calculate,
+            self.clear_data,
+            self.on_closing
+        ]
+
+        self.button_widgets = [tk.Button(master, text=text, command=cmd, bg=accent_color, fg=ff_color)
+                               for text, cmd in zip(button_texts, button_commands)]
+
+        # Grid layout
+        for i, label_widget in enumerate(self.label_widgets):
+            label_widget.grid(row=i, column=0, padx=10, pady=10, sticky="e")
+        for i, entry_widget in enumerate(entry_widgets):
+            entry_widget.grid(row=i, column=1, padx=10, pady=10, sticky="w")
+        for i, button_widget in enumerate(self.button_widgets):
+            button_widget.grid(row=i, column=2, columnspan=2, pady=10)
+
+        # Notification panel
+        self.notification_text = tk.Text(master, height=2, width=40)
+        self.notification_text.grid(row=len(label_texts) + 1, column=0, columnspan=6, pady=20)
+
+        # Apply the background color to widgets
+        for widget in self.label_widgets + self.button_widgets + [self.notification_text]:
+            widget.configure(bg=tt_color, fg=ff_color)
+    """
+    """
+    class AccountTransactions(BankAccount):
+
+
+    def __init__(self, account_number, account_holder, customer_id, default_balance, data_ops: DataOps, interface: InterfaceBank):
+        super().__init__(account_number, account_holder, customer_id, default_balance)
+        self.data_ops = data_ops
+        self.interface = interface
+
+
+    def withdraw(self, amount, customer_id):
+
+        try:
+            amount = float(amount)
+
+            if not isinstance(customer_id, str):
+                raise TypeError("Customer ID must be a string.")
+
+            if amount > self.data_ops.selected_customer.account_balance:
+                raise InsufficientFundsError("Insufficient funds to proceed to withdrawal.")
+
+            if amount < 1:
+                raise InvalidWithrawalAmountError("Invalid withdrawal amount. Please enter a valid number.")
+
+            if customer_id != self.data_ops.selected_customer.customer_id:
+                raise InvalidCustomerIDError("Invalid customer ID.")
+
+            self.account_balance -= amount
+
+            if amount >= 5000:
+                self.display_notification(f" A large amount of ${amount} was successfully withdrawn from your account.") #Inform the customer of large withdrawls from their account
+            self.transaction_history.append({"Type of transaction": "withdrawal", "Amount withdrawn": amount})
+            self.interface.display_notification(f"{amount} was successfully withdrawn")
+            messagebox.showinfo("Success", f"Withdrawal of ${amount} was successful. Your new account balance is {self.account_balance}")
+            return True
+
+        except ValueError:
+            messagebox.showerror("Error", "Invalid withdrawal amount. Please enter a valid number.")
+            return False
+        except TypeError as e:
+            messagebox.showerror("Error", str(e))
+            return False
+        except InsufficientFundsError as e:
+            messagebox.showerror("Error", e.message)
+            print("Insufficient funds to proceed to withdrawal")
+            return False
+        except InvalidCustomerIDError as e:
+            messagebox.showerror("Error", e.message)
+            return False
+        except InvalidWithrawalAmountError as e:
+            messagebox.showerror("Error", e.message)
+            return False
+
+
+    def deposit(self, amount, customer_id):
+
+        try:
+            amount = float(amount)
+            if not isinstance(customer_id, str):
+                raise TypeError("Customer ID must be a string.")
+
+            if amount < 1:
+                raise InvalidDepositAmountError(f"Minimum deposit amount is ${1}.")
+
+            if customer_id != self.data_ops.selected_customer.customer_id:
+                raise InvalidCustomerIDError("Invalid customer ID.")
+
+            self.account_balance += amount
+            if amount >= 50000:
+                self.display_notification(f" A large amount of ${amount} was successfully deposit to your account.") #Inform the customer of large deposits from their account
+
+            self.transaction_history.append({"Type of transaction": "deposit", "Amount withdrawn": amount})
+            self.interface.display_notification(f"Withdrawal of {amount} was successful")
+            messagebox.showinfo("Success", f"Deposit of ${amount} was successful. Your new account balance is ${self.account_balance}")
+            return True
+
+        except ValueError:
+            messagebox.showerror("Error", "Invalid deposit amount. Please enter a valid number.")
+            return False
+        except TypeError as e:
+            messagebox.showerror("Error", e)
+            return False
+        except InvalidDepositAmountError as e:
+            messagebox.showerror("Error", e.message)
+            return False
+        except InvalidCustomerIDError as e:
+            messagebox.showerror("Error", e.message)
+            return False
+
+
+    def check_balance(self, customer_id, account_number):
+
+
+        try:
+            if not isinstance(account_number, str):
+                raise TypeError("Customer account number must be a string.")
+
+            if not isinstance(customer_id, str):
+                raise TypeError("Customer ID must be a string.")
+
+            if customer_id != self.data_ops.selected_customer.customer_id:
+                raise InvalidCustomerIDError("Error. You entered a wrong PIN")
+
+            if account_number != self.data_ops.selected_customer.account_number:
+                raise InvalidAccountNumberError(f"Error. You entered an invalid account number")
+
+            # Retrieve and display balance
+            current_balance = self.data_ops.selected_customer.account_balance
+            self.interface.display_notification(f"Your current account balance is ${current_balance}.")
+            messagebox.showinfo(f"Your current account balance is ${current_balance}.")
+            return True
+
+        except ValueError:
+            messagebox.showerror("Error", "Invalid input. Please try again.")
+            return False
+        except TypeError as e:
+            messagebox.showerror("Error", str(e))
+            return False
+        except InvalidCustomerIDError as e:
+            messagebox.showerror("Error", e.message)
+            return False
+        except InvalidAccountNumberError as e:
+            messagebox.showerror("Error", e.message)
+            return False
+
+    def transactions(self, customer_id, account_number):
+
+        try:
+            if not isinstance(account_number, str):
+                raise TypeError("Customer account number must be a string.")
+
+            if not isinstance(customer_id, str):
+                raise TypeError("Customer ID must be a string.")
+
+            if customer_id != self.data_ops.selected_customer.customer_id:
+                raise InvalidCustomerIDError("Error. You entered a wrong PIN")
+
+            if account_number != self.data_ops.selected_customer.account_number:
+                raise InvalidAccountNumberError(f"Error. You entered an invalid account number")
+
+            transactions =  self.data_ops.selected_customer.account_transactions(customer_id, account_number)
+            if transactions:
+
+                formatted_transactions = "\n".join(str(transaction) for transaction in transactions)
+                messagebox.showinfo("Transactions", f"{self.data_ops.selected_customer.account_holder}'s transaction history:\n{formatted_transactions}")
+                return formatted_transactions
+
+            else:
+                # Handle the case where there are no transactions
+                messagebox.showinfo("Transactions", f"{self.data_ops.selected_customer.account_holder}'s transaction history is empty.")
+                return ""
+
+        # Handle specific exceptions with custom messages
+        except ValueError as e:
+            messagebox.showerror("Error", f"Invalid input for transaction history: {e}")
+        except TypeError as e:
+            messagebox.showerror("Error", str(e))
+        except InvalidCustomerIDError as e:
+            messagebox.showerror("Error", e.message)
+        except InvalidAccountNumberError as e:
+            messagebox.showerror(f"Error", e.message)
+        except Exception as e:
+            messagebox.showerror(f"Error", {e})
+
+    def budget_spending(self, category, amount):
+
+        try:
+            amount = float(amount)
+        except ValueError as e:
+            print(f"Error amount value has to be a float {e}")
+
+        if category not in self.budget_categories:
+            print(f"Dear {self.account_holder} category: {category} not set!")
+            return
+
+        if amount > 0:
+            self.account_balance -= amount
+
+            #check aganist budget limit
+            if amount > self.budget_categories[category]:
+                print(f"Dear {self.account_holder} you have exceded your budget for {category}")
+
+            self.transaction_history.append({"Type of transaction": "Expense", "Category": category, "Amount spent": amount})
+
+            self.send_notification()
+            print(f"Expense of {amount} from {category} was successful. Your new balance is {
+                self.account_balance}")
+        else:
+            print(f"Invalid expense amount {amount}. Please insert a positive value")
+            return
+
+
+    def get_expense(self, category, amount):
+
+        try:
+            amount = float(amount)
+        except ValueError as e:
+            print(f"Error invalid amount {e}")
+
+        if category not in self.budget_categories:
+            print(f"Category '{category}' not found in budget.")
+            return
+
+        if category not in self.cumulative_expenses:
+            self.cumulative_expenses[category] = 0
+
+        limit = self.budget_categories[category]
+
+        if amount + self.cumulative_expenses[category] > limit:
+            print("Exceeding budget limit")
+            return
+
+        else:
+            self.account_balance -= amount
+
+            self.cumulative_expenses[category] += amount  # Increment cumulative expenses
+
+            limit_after_spending = self.budget_categories[category] - amount
+            self.budget_categories[category] -= amount
+
+            print(f"You have succesfully spent {amount} form category {category} remainig ${limit_after_spending}")
+
+            self.transaction_history.append({"Type of transaction": "Expense", "Category": category, "Amount spent": amount})
+            self.send_notification()
+
+            return limit_after_spending
+    def send_notification(self):
+
+        # Check for significant events
+        if self.transaction_history:
+            last_transaction = self.transaction_history[-1]
+
+            #check for large deposit
+            if last_transaction["Type of transaction"].lower() == "deposit" and last_transaction["Amount deposited"] >= 50000:
+                print("Notification: A large deposit was made to your account.")
+
+            #check or large withdrawals
+            elif last_transaction["Type of transaction"].lower() == "withdrawal" and last_transaction["Amount withdrawn"] >= 5000:
+                print("Notification: A large withdrawal was made from your account.")
+
+        # Check balance threshold
+        if self.account_balance <= self.threshold:
+            print(f"Notification: Your account balance is below ${self.threshold}.")
+
+
+import tkinter as tk
+from tkinter import ttk
+
+class InterfaceBank:
+
+    def __init__(self, master, data_ops, bank_account, account_creation):
+        self.master = master
+        self.master.title("A-Z TRAPEZA")
+        self.data_ops = data_ops
+        self.bank_account = bank_account
+        self.account_creation = account_creation
+        self.customer = None
+
+        # Setting a modern color scheme
+        bg_color_window = "#4d3d08"
+        bg_color = "#5d6134"
+        accent_color = "#548ca8"
+        highlight_color = "#D8BFD8"
+        tt_color = "#4d3d08"
+        ff_color = "#ebc81a"
+
+        # Set a modern font
+        font_style = ("Segoe UI", 12)
+
+        # Master window background
+        master.configure(bg=bg_color_window)
+
+        # Labels for Customer info:
+        label_texts = ["Account number:", "Amount:",
+                       "Customer ID(PIN):", "Budget Category:", "Budget Limit:", "Threshold:"]
+        self.label_widgets = [ttk.Label(master, text=text, font=font_style) for text in label_texts]
+
+        # Entry fields
+        entry_widgets = [ttk.Entry(master, font=font_style) for _ in range(len(label_texts))]
+        self.entry_account_number, self.entry_amount, \
+            self.entry_customer_id, self.entry_budget_category, \
+            self.entry_budget_limit, self.entry_threshold, = entry_widgets
+
+        # Buttons
+        button_texts = ["Deposit", "Withdraw", "Set Budget", "Create Account",
+                        "Select Customer", "Budget Limit", "Budget Categories", "Transactions", "Check Balance", "Calculate", "Spend Budget", "Set Threshold", "Clear Data", "Exit A-Z"]
+
+        button_commands = [self.deposit_money, self.withdraw_money, self.set_budget,
+                           self.create_account_window, self.select_customer, self.get_budget_category_limit,
+                           self.budget_categories_dict, self.show_account_transactions, self.check_account_balance, self.calculate, self.spend_budget, self.set_threshold, self.clear_data, self.exit_az]
+
+        self.button_widgets = [ttk.Button(master, text=text, command=cmd, style='Accent.TButton')
+                               for text, cmd in zip(button_texts, button_commands)]
+
+        # Adding a modern style
+        style = ttk.Style()
+        style.configure('Accent.TButton', background=accent_color, foreground=ff_color, font=font_style)
+
+        # Grid layout
+        for i, label_widget in enumerate(self.label_widgets):
+            label_widget.grid(row=i, column=0, padx=10, pady=10, sticky="e")
+        for i, entry_widget in enumerate(entry_widgets):
+            entry_widget.grid(row=i, column=1, padx=10, pady=10, sticky="w")
+        for i, button_widget in enumerate(self.button_widgets[:3]):  # First three buttons
+            button_widget.grid(row=i, column=2, columnspan=2, pady=10)
+
+        # Set button
+        self.button_widgets[4].grid(row=2, column=4, columnspan=2, pady=10)
+        for i, button_widget in enumerate(self.button_widgets[3:5]):  # Remaining budget-related buttons
+            button_widget.grid(row=len(label_texts) + 1, column=i, padx=10, pady=10)
+        for i, button_widget in enumerate(self.button_widgets[5:]):  # Remaining buttons
+            button_widget.grid(row=i, column=4, columnspan=2, pady=10)
+
+        # Notification panel
+        self.notification_text = tk.Text(master, height=2, width=40)
+        self.notification_text.grid(row=len(label_texts) + 2, column=0, columnspan=6, pady=20)
+
+        # Apply the background color to widgets
+        for widget in self.label_widgets + self.button_widgets + [self.notification_text]:
+            widget.configure(style='Accent.TButton')
+
+    def clear_data(self):
+        # Implement clearing data logic
+        pass
+
+    def exit_az(self):
+        self.master.destroy()
+
+# Example usage:
+root = tk.Tk()
+app = InterfaceBank(root, data_ops, bank_account, account_creation)
+root.mainloop()
+
+def update_gui(self):
+        if self.data_ops.selected_customer:
+            # Display current balance
+            interface.label_balance.config(text=f"Current Balance: ${self.data_ops.selected_customer.account_balance:.2f}")
+
+            # Display threshold or initialize to $0.0 if not set
+            threshold_text = f"Threshold: ${self.data_ops.selected_customer.threshold:.2f}" if hasattr(self.data_ops.selected_customer, 'threshold') else "Threshold: $0.0"
+            self.label_threshold.config(text=threshold_text)
+        else:
+            # Handle no customer selected case
+            self.display_notification("No customer selected")
+
+    """
+    #def create_account_window(self):
+        """
+        Creates a window for adding accounts.
+
+        # Create a new window
+        account_window = tk.Toplevel(self.master)
+        account_window.title("Create Account")
+
+        # Define labels and entries with a dictionary
+        account_fields = {
+            "customer_name": {"label": "Customer Name:", "entry": tk.Entry(account_window)},
+            "account_number": {"label": "Account Number:", "entry": tk.Entry(account_window)},
+            "account_holder": {"label": "Account Holder:", "entry": tk.Entry(account_window)},
+            "customer_id": {"label": "Customer ID:", "entry": tk.Entry(account_window)},
+            "default_balance": {"label": "Default Balance:", "entry": tk.Entry(account_window)},
+        }
+
+        # Add labels and entries to the grid layout
+        row = 0
+        for field_name, field_data in account_fields.items():
+            label = tk.Label(account_window, text=field_data["label"])
+            label.grid(row=row, column=0, padx=10, pady=10)
+            field_data["entry"].grid(row=row, column=1, padx=10, pady=10)
+            row += 1
+
+        # Add button to add the account
+        button_add_account = tk.Button(
+            account_window, text="Add Account", command=lambda: self.add_account(account_fields))
+        button_add_account.grid(row=row, column=0, columnspan=2, pady=10)
+        """

@@ -1,0 +1,5 @@
+"account_holder: Khambe\naccount_number: '123556734'\naccounts:\n- '!!python/object:Alpha.BankAccount\n\
+  \n  account_balance: customer_id\n\n  account_holder: account_number\n\n  account_number:\
+  \ customer_name\n\n  budget_categories: {}\n\n  cumulative_expenses: {}\n\n  customer_id:\
+  \ account_holder\n\n  threshold: 0.0\n\n  transaction_history: []\n\n  '\ncustomer_id:\
+  \ '9088'\ncustomer_name: Mabelo\ndefault_balance: 990.0\n"
